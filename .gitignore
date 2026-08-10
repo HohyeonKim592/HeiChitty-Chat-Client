@@ -15,6 +15,10 @@ electron/app/
 electron/node_modules/
 electron/dist/
 
+# 배포 산출물 (dmg/exe). electron-builder directories.output = ../release
+# electron/ 는 Capacitor 가 재생성하는 영역이라 산출물을 그 밖에 둔다.
+release/
+
 # macOS
 .DS_Store
 

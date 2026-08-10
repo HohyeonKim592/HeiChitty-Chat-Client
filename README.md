@@ -58,13 +58,24 @@ npm run electron:start-live
 # 또는 디버거 포함 단발 실행
 npm run electron:start
 
-# 배포 패키지 빌드 (현재 OS 대상)
-npm run electron:pack    # 패키징 폴더만 생성 (electron/dist, 서명/배포 없음)
-npm run electron:make    # 설치 파일 생성 (electron-builder.config.json 기준)
+# 배포 패키지 빌드 — 반드시 sync → build → builder 순서
+npx cap sync @capacitor-community/electron    # web/ → electron/app/
+cd electron && npm run build                   # tsc → electron/build/src/
+
+npx electron-builder --mac -c ./electron-builder.config.json -p never   # macOS universal dmg
+npx electron-builder --win -c ./electron-builder.config.json -p never   # Windows x64 NSIS exe
 ```
 
-> Windows 설치 파일은 Windows에서, macOS 설치 파일은 macOS에서 빌드하는 것이 기본입니다.
-> `electron:make`는 `-p always`(자동 publish)가 기본이므로, 로컬 산출물만 원하면 `electron:pack`을 쓰거나 `electron/electron-builder.config.json`을 조정하세요.
+**산출물은 저장소 루트 `release/`에 생깁니다** (`directories.output: "../release"`).
+`electron/`은 Capacitor가 재생성하는 영역이라 배포물을 그 밖에 둡니다. `.gitignore` 처리돼 있습니다.
+
+> **호출 함정 2가지 (2026-08-10 실측)**
+> - `--mac dmg`처럼 **타깃까지 CLI로 주면** config의 `arch: ["universal"]`이 덮여 host 아키텍처로만 나옵니다. **`--mac`/`--win`만 주고 arch는 config에 맡기세요.**
+> - `npm run electron:make`는 `-p always`라 **GitHub 릴리스 업로드를 시도**합니다. 로컬 산출물만 원하면 위처럼 `-p never`를 쓰세요.
+
+> **Windows 빌드는 이 Mac에서 됩니다** — electron-builder가 자체 번들 wine(`wine-4.0.1-mac`)을 자동으로 내려받아 처리하므로 wine을 따로 설치할 필요가 없습니다.
+
+> **현재 산출물은 미서명입니다.** macOS는 Gatekeeper, Windows는 SmartScreen 경고가 뜹니다. 공개 배포 전 코드 서명이 필요합니다(G-SIGN).
 
 ---
 

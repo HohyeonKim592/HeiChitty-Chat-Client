@@ -9,13 +9,24 @@
 - [ ] **접속→로그인→채팅 끝단 동선** — 로그인 성공 이후 구간 미검증 (세션 유지: `wc_token` HttpOnly 쿠키 + `GET /me` 복원). *로그인 화면 렌더까지는 2026-08-10 확인*
 - [ ] **OS 수준 실제 오프라인** — 2026-08-10 검증의 오프라인 분기는 `navigator.onLine` 오버라이드였다(CDP 오프라인 에뮬레이션이 `navigator.onLine`을 뒤집지 않아서). 실제 네트워크 해제 시 동작은 미확인
 - [ ] **모바일 preflight/CSP 동등 검증** — Android/iOS 웹뷰에서도 preflight `fetch`가 막히는지. Electron에서 터진 문제라 웹뷰별 확인 필요
-- [ ] **Electron 창이 화면에 안 보이는 문제** — 두 디스플레이 어디에도 미표시(`windowStateKeeper` 저장 좌표가 화면 밖일 가능성). 원인 미확인·재현조건 미정. *CDP로 렌더러에 직접 붙어 검증은 진행했음*
+- [ ] **dmg/exe 실제 설치 테스트** — 산출물 생성·기동은 확인. 설치 과정(dmg 마운트→드래그, NSIS 마법사)은 미검증. 미서명이라 Gatekeeper·SmartScreen 경고 예상
+- [ ] **Windows 실기 실행** — exe를 이 Mac에서 만들었을 뿐 Windows에서 실행해 보지 않았다
+- [ ] **Electron 창을 CLI에서 확인 불가** — `screencapture` 미포착 + System Events 창 0개 보고. **원인 미확인**. ~~`windowStateKeeper` 좌표가 화면 밖~~ 가설은 **틀렸다**(실제 저장값 `{x:256,y:91,1000x800}` / `displayBounds 1512x982` = 화면 안). 앱 자체는 TCP 연결로 정상 확인됨 → **CLI 관측의 한계**로 보이며 육안 확인 필요
 - [ ] **Android 실기** — 첫 화면에서 원격으로 자동접속(`location.replace`로 셸 미잔류 확인). 하드웨어 뒤로가기 정책은 CE4-S1
 - [ ] **iOS** — 자동접속 동선 (iOS 빌드환경 확보 후, CE0-S6/CE2-S3)
 - [ ] **로그인 후 채팅 기능 전반** — 메시지 송수신·방 진입·DM 등 뷰어 통과 확인(기능 자체는 서버 책임)
 - [ ] **Android/iOS 빌드 산출물 실행**(CE2) — http 서버 접속 시 cleartext/ATS 설정 필요(CE3)
 
 ## 최근 완료 (2026-08-10)
+
+- **CE2-S1 데스크톱 설치파일 생성 완료(미서명)** — Mac universal dmg + Windows x64 NSIS exe. 결정 반영: 공개 배포 지향 · Intel Mac 포함 · 이 Mac에서 Windows까지 · 인증서 없음 · 버전 SSOT `0.0.1`(발매 시 1.0.0 승격)
+  - **배포 산출물 경로 = 저장소 루트 `release/`** (`directories.output: "../release"`). `electron/`은 Capacitor 재생성 영역이라 그 밖으로 뺐다. `.gitignore` 처리
+  - **wine 별도 설치 불필요** — electron-builder가 자체 번들 `wine-4.0.1-mac`을 자동 내려받아 처리. Rosetta·Homebrew 개입 없었음
+  - 템플릿 기본값이 전부 남아 있던 것을 정리: `appId com.yourdoamnin.yourapp` → `kr.co.heichitty.chat`, `productName` 신규(없으면 표시명이 패키지명으로 나옴), `mac.category`, 버전 `1.0.0` → `0.0.1`
+  - **호출 함정 2개** — ① `--mac dmg`처럼 타깃을 CLI로 주면 config의 `arch:["universal"]`이 덮여 host arch로만 나온다(`--mac`만 줄 것) ② `npm run electron:make`는 `-p always`라 GitHub 업로드를 시도한다(`-p never` 쓸 것)
+- **패키징 빌드 전용 버그 발견·수정 — autoUpdater 모달이 앱을 막던 문제** — `electron/src/index.ts`의 `autoUpdater.checkForUpdatesAndNotify()`가 private 리포 릴리스 피드 조회로 **404** → unhandled Promise rejection → `electron-unhandled`이 프로덕션에서 **모달 오류창**을 띄워 앱이 멈춤. `.catch()`로 삼키도록 수정(CE5-S1 착수 시 피드와 함께 재검토)
+  - **개발 모드에선 재현되지 않는다.** CE1 동선 A~D가 전부 통과한 상태에서도 패키징 빌드는 기동조차 못 했다 — CSP 건에 이어 **패키징 검증이 따로 필요하다는 두 번째 사례**
+  - 패키징 앱은 **CDP가 붙지 않아**(`/json` 빈 응답, browser WS 불가) 로그·TCP 연결·화면 캡처로 진단해야 한다
 
 - **Desktop/Electron 실기 재검증 + CSP 버그 2건 발견·수정** — `electron/src/setup.ts` `setupContentSecurityPolicy()` 한 곳이 원인. 기본 템플릿이 "로컬 자산 전용 앱"을 전제로 쓴 코드라 **원격 웹을 띄우는 뷰어**라는 이 앱의 전제와 어긋나 있었다. → `CE1-S3`·`CE1-S5` 실기 근거 확보
   - **버그① 원격 자산 전멸** — `onHeadersReceived`가 세션 전역이라 원격 서버 응답의 CSP까지 커스텀 스킴 전용 정책으로 **대체**. 서버가 보낸 `default-src 'self' …`가 사라져 `chat.css`·`chat.js`·`socket.io.js`가 전부 차단 → 화면 무스타일·실시간 채팅 미동작. **수정**: 커스텀 스킴 응답에만 CSP 적용, 원격 응답은 서버 CSP 존중

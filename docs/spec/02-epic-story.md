@@ -60,7 +60,12 @@
 > `connect-src` 오리진은 메인 프로세스가 `app/config.js`를 읽어 파생한다. **스킴 보정 규칙을 `web/app.js`의 `defaultSchemeFor()`/`normalize()`와 동일하게 유지할 것** — 갈리면 preflight가 조용히 막힌다. `isAllowedTarget`(`setup.ts:189`)과 같은 성격의 **뷰어용 seam**이니 깨지 말 것.
 
 ### CE2 — 플랫폼 빌드·배포
-- [ ] `CE2-S1` **Desktop 설치파일** — `electron:pack`/`electron:make`로 Win/Mac 산출물 생성·실행 검증 (`electron-builder.config.json`)
+- [x] `CE2-S1` **Desktop 설치파일** — 2026-08-10 Win/Mac 산출물 생성·실행 검증 완료(**미서명**)
+  - 산출물: `HeiChitty Chat-0.0.1-universal.dmg`(172MB, x86_64+arm64) · `HeiChitty Chat Setup 0.0.1.exe`(79MB, x64)
+  - **저장 경로 = 저장소 루트 `release/`** (`directories.output: "../release"`). `electron/`은 Capacitor가 재생성하는 영역이라 배포물을 그 밖에 둔다. `.gitignore` 처리됨
+  - **Windows 빌드에 wine 별도 설치 불필요** — electron-builder가 자체 번들 `wine-4.0.1-mac`을 자동 내려받아 이 Mac에서 처리
+  - 호출 시 주의: `--mac dmg`처럼 타깃을 CLI로 주면 config의 `arch: ["universal"]`이 덮여 host arch로만 나온다. **`--mac`/`--win`만 주고 arch는 config에 맡길 것**
+  - `npm run electron:make`는 `-p always`라 **GitHub 업로드를 시도**한다. 산출물만 원하면 `-p never`
 - [ ] `CE2-S2` **Android 서명 빌드** — release keystore + AAB/APK 〔G-SIGN〕
 - [ ] `CE2-S3` **iOS 빌드·서명** — Xcode 프로젝트(CE0-S6 후) + Apple 개발자계정·프로비저닝 〔G-IOS·G-SIGN〕
 - [ ] `CE2-S4` 배포 채널 확정·산출물 정의 〔G-DIST〕
@@ -70,7 +75,8 @@
 - [ ] `CE3-S2` **`allowNavigation` 좁히기** — 현재 `["*"]` → 운영 서버 도메인 한정 〔G-DOM〕. *config-only 결정으로 즉시 진행 가능 — `web/config.js` 도메인과 동일 값으로 좁힐 것*
   - 함께 볼 것: Electron 셸 CSP의 `connect-src`도 같은 오리진을 가리켜야 한다. 지금은 `app/config.js` 정규식 파싱으로 파생하는데, `allowNavigation`이 좁혀지면 **거기서 파생하도록 격상(B-1′)**해 파싱·스킴보정 중복을 없앨 수 있다
 - [ ] `CE3-S3` 앱 아이콘·스플래시 (`@capacitor/assets` 등으로 4플랫폼 생성)
-- [ ] `CE3-S4` 표시명·버전·환경(개발/운영) 프로파일 — `appName`·버전 일원화, 빌드별 서버 기본값(선택)
+- [~] `CE3-S4` 표시명·버전·환경(개발/운영) 프로파일 — **데스크톱분 완료(2026-08-10)**: `productName: HeiChitty Chat` · `appId: kr.co.heichitty.chat` · 버전 SSOT **`0.0.1`**(발매 준비 완료 시 1.0.0 승격) · `mac.category: public.app-category.social-networking`. 남은 것: 모바일 표시명, 빌드별 서버 기본값(선택)
+  - ⚠️ `capacitor.config.json`의 `appName`은 **electron-builder가 참조하지 않는다**. 데스크톱 표시명은 `electron-builder.config.json`의 `productName`이 따로 정한다 — 둘을 같이 고칠 것
 
 ### CE4 — 네이티브 통합 + 푸시 *(v1)*
 - [ ] `CE4-S1` Android 하드웨어 뒤로가기 — 원격 페이지 히스토리/앱 종료 정책
@@ -123,18 +129,24 @@
 - ✅ **오프라인 분기**(2026-08-10) — 전용 메시지 `네트워크 연결이 없습니다` + 오프라인 배너 노출 + 접속 시도 안 함
 - ✅ **online 복귀 자동 재시도**(2026-08-10) — 수동 개입 없이 원격 접속
 - ✅ **서버 변경의 클라 반영 특성**(2026-08-10) — `no-cache`+`ETag`, SW 없음 → 서버만 고치면 다음 실행에서 즉시 반영
+- ✅ **패키징(프로덕션) 빌드 동작**(2026-08-10) — dmg 산출물 실행 시 렌더러가 서버로 TCP 3연결(HTML·CSS·JS) 확립. 즉 **asar 안의 `app/config.js` 읽기 성공 → 프로덕션 CSP `connect-src` 정상 → preflight 통과 → 자동접속**까지 확인
+  - ⚠️ **패키징 앱은 CDP가 붙지 않는다** (`/json` 빈 응답, browser WS 연결 불가). 개발 빌드에서 쓰던 CDP 검증법을 못 쓰므로, 패키징 검증은 **로그·TCP 연결·화면 캡처**로 한다
 
 > **검증 범위 명시** — 도달 실패(A)·재시도(B)는 **서버를 실제로 정지·재기동**시켜 검증했다. 반면 **오프라인 분기는 `navigator.onLine` 오버라이드**다 — Electron의 CDP 오프라인 에뮬레이션이 `navigator.onLine`을 뒤집지 않아(에뮬레이션의 한계이지 앱 문제 아님) 그 분기를 그 방법으로는 태울 수 없었다. **OS 수준 실제 네트워크 해제는 미검증.**
 
 **남은 검증 후보 (수동·실기)**
 - [ ] **로그인 → 채팅 화면 진입** 끝단 동선 — 로그인 화면 렌더까지만 확인됨
 - [ ] **OS 수준 실제 오프라인** — 위 범위 명시 참조
+- [ ] **dmg/exe 실제 설치 테스트** — 산출물 생성·기동은 확인했으나 설치 과정(dmg 마운트→드래그, NSIS 설치 마법사)은 미검증. **미서명이라 Gatekeeper·SmartScreen 경고가 뜬다**
+- [ ] **Windows 실기 실행** — exe는 이 Mac에서 만들었을 뿐 Windows에서 실행해 보지 않았다
 - [ ] **모바일 preflight/CSP 동등 검증** — Android/iOS 웹뷰에서도 preflight `fetch`가 막히는지
 - [ ] **Android 실기** — 첫 화면에서 원격으로 자동접속(`replace`로 셸 미잔류) · 하드웨어 뒤로가기 정책은 CE4-S1
 - [ ] **iOS** — 자동접속 동선 (iOS 빌드환경 확보 후, CE0-S6/CE2-S3)
 - [ ] 로그인 후 메시지 송수신·방 진입 등 채팅 기능 전반(서버 책임이나 뷰어 통과 확인)
 - [ ] Android/iOS **빌드 산출물 실행**(CE2) · http 서버 접속 시 cleartext/ATS 설정(CE3)
-- [ ] **Electron 창 미표시 문제** — 두 디스플레이 어디에도 안 보임(`windowStateKeeper` 저장 좌표 추정). 원인 미확인
+- [ ] **Electron 창을 CLI에서 확인 불가** — `screencapture`로 잡히지 않고 System Events는 창을 0개로 보고한다. **원인 미확인.**
+  - ~~`windowStateKeeper` 저장 좌표가 화면 밖~~ → **아님**. 실제 저장값은 `{x:256, y:91, 1000x800}` / `displayBounds 1512x982`로 화면 안이다(2026-08-10 확인)
+  - 앱 자체는 정상이다 — 페이지 로드·서버 접속이 TCP로 확인된다. **CLI 관측의 한계**일 가능성(터미널이 전체화면 Space 점유, Electron 창의 접근성 열거 특성)이 높다. 사용자 육안 확인 필요
 
 ## 외부 의존 (서버측)
 

@@ -1,7 +1,9 @@
 {
-  "appId": "com.yourdoamnin.yourapp",
+  "appId": "kr.co.heichitty.chat",
+  "productName": "HeiChitty Chat",
   "directories": {
-    "buildResources": "resources"
+    "buildResources": "resources",
+    "output": "../release"
   },
   "files": [
     "assets/**/*",
@@ -18,11 +20,22 @@
     "allowToChangeInstallationDirectory": true
   },
   "win": {
-    "target": "nsis",
+    "target": [
+      {
+        "target": "nsis",
+        "arch": ["x64"]
+      }
+    ],
     "icon": "assets/appIcon.ico"
   },
   "mac": {
-    "category": "your.app.category.type",
-    "target": "dmg"
+    "category": "public.app-category.social-networking",
+    "icon": "assets/appIcon.png",
+    "target": [
+      {
+        "target": "dmg",
+        "arch": ["universal"]
+      }
+    ]
   }
 }

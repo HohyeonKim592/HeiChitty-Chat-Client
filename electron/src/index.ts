@@ -46,7 +46,15 @@ if (electronIsDev) {
   // Initialize our app, build windows, and load content.
   await myCapacitorApp.init();
   // Check for updates if we are in a packaged app.
-  autoUpdater.checkForUpdatesAndNotify();
+  //
+  // 자동 업데이트(CE5-S1)는 아직 미구현이고 릴리스 피드도 없다(리포 private).
+  // 이 호출이 실패하면 unhandled Promise rejection 이 되어 electron-unhandled 이
+  // 프로덕션에서 모달 오류창을 띄우고, 앱이 그 상태로 멈춘다(2026-08-10 패키징 빌드 확인).
+  // 업데이트 확인 실패가 앱 기동을 막지 않도록 여기서 삼킨다.
+  // CE5-S1 착수 시 피드 설정과 함께 오류 처리 정책을 다시 볼 것.
+  autoUpdater.checkForUpdatesAndNotify().catch((err) => {
+    console.warn('[updater] 업데이트 확인 건너뜀:', err?.message ?? err);
+  });
 })();
 
 // Handle when all of our windows are close (platforms have their own expectations).
