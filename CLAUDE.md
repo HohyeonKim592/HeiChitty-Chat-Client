@@ -91,4 +91,4 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | 서버 주소(빌드 타임 config) | `web/config.js` |
 | Capacitor 설정(appId·webDir·허용도메인) | `capacitor.config.json` |
 | 데스크톱 보안/네비게이션 | `electron/src/setup.ts` |
-| 원격 서버(채팅 본체) | 별도 경로 `../heichitty-chat` (이 저장소 아님) |
+| 원격 서버(채팅 본체) | 별도 경로 `../heichitty-chat` · 리포 `HohyeonKim592/heichitty-chat` (이 저장소 아님 — 이름이 아닌 런타임 값으로만 연결되므로 서버측 개명은 여기 영향 없음) |

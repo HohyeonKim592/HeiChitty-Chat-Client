@@ -18,6 +18,7 @@
 - **git 저장소 확정** — private GitHub `HohyeonKim592/heichitty-chat-client` 생성(default `main`) + 초기 임포트 단일 커밋 `460d89f`(83 files). 브랜치 모델 = `Hohyeon.Kim`에서 작업 → `main` 병합(형제 chitty 리포 관례 승계). → `CE0-S2` 완료
 - **appId 확정** `kr.co.heichitty.chat` — android 네이티브 패키지까지 반영. → `CE3-S1` 완료 · **G-ID 통과**
 - **`www` 잔재 정리** — `electron/src/setup.ts` 주석의 `www/config.js` → `web/config.js` (6/22 폴더 리네임 누락분, 동작 영향 없음)
+- **서버측 개명 영향 점검 — 이 저장소는 수정 불요(재점검 불필요)** — 서버가 폴더 `chittyChat` → `heichitty-chat`(맥미니 반영·서비스 정상), GitHub 리포도 `ChittyChat` → `heichitty-chat`으로 개명됨. 이 저장소 전수 검색 결과 `ChittyChat`·서버 리포 URL 참조 **0건**. 두 리포의 접점은 이름이 아니라 **런타임 값 3개**(`web/config.js`의 주소 · `allowNavigation` · `appId`)뿐이라 서버 개명은 여기에 영향이 없다
 
 ## 최근 완료 (2026-06-22)
 
