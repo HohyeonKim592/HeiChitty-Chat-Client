@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>HeiChitty Chat</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- 상태화면: 접속 불가/오프라인일 때만 노출. 서버 주소 입력은 없다(config-only). -->
+  <main class="status" id="status" hidden>
+    <p class="banner" id="offline-banner" role="status" hidden>오프라인 — 네트워크 연결을 확인하세요.</p>
+    <h1 class="title">HeiChitty Chat</h1>
+    <p id="status-text" class="status-msg" role="alert"></p>
+    <button class="btn" id="retry" type="button">다시 시도</button>
+  </main>
+
+  <div class="splash" id="splash">
+    <div class="spinner" aria-hidden="true"></div>
+    <p class="splash-text" id="splash-text">접속 중…</p>
+  </div>
+
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+{
+  "appId": "kr.co.heichitty.chat",
+  "appName": "HeiChitty Chat",
+  "webDir": "web",
+  "server": {
+    "androidScheme": "https",
+    "allowNavigation": ["*"]
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "name": "heichitty-chat-client",
+  "version": "0.0.1",
+  "private": true,
+  "description": "HeiChitty Chat 데스크톱·모바일 뷰어 (Capacitor 웹뷰 래퍼)",
+  "type": "module",
+  "scripts": {
+    "lint": "node --check web/app.js",
+    "test": "node test/ce1-shell.mjs",
+    "smoke": "node test/ce1-shell.mjs",
+    "test:ce1": "node test/ce1-shell.mjs",
+    "sync": "cap sync",
+    "open:android": "cap open android",
+    "open:ios": "cap open ios",
+    "open:electron": "cap open @capacitor-community/electron",
+    "run:electron": "cap sync @capacitor-community/electron && cd electron && npm run electron:start-live",
+    "build:android": "cap sync android && cap open android",
+    "add:ios": "cap add ios"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@capacitor/android": "^6.0.0",
+    "@capacitor/core": "^6.0.0"
+  },
+  "devDependencies": {
+    "@capacitor-community/electron": "^5.0.1",
+    "@capacitor/cli": "^6.0.0"
+  }
+}
