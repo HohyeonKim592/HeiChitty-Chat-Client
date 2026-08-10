@@ -2,12 +2,14 @@
 
 > 진행 SSOT는 `spec/02-epic-story.md`(체크박스) + `git log`. 이 파일은 **다음에 손댈 것**을 위에서부터 모아둔 작업 큐다.
 
-## 🔼 남은 검증 후보 (최우선 — 2026-06-22 config-only 재설계 반영)
+## 🔼 남은 검증 후보 (최우선 — 2026-08-10 Desktop 실기검증 반영)
 
-> ⚠️ 2026-06-20 런처 기반 수동 검증은 config-only 전환으로 무효(런처·자동접속 토글·서버변경·`back_forward`/`#settings` 제거). 셸 스모크는 9/9 통과(`npm test`). 아래는 수동·실기 미검증분.
+> 셸 스모크는 9/9 통과(`npm test`). 아래는 수동·실기 미검증분.
 
-- [ ] **Desktop/Electron 재검증** — config 주소 자동접속 → 실 HeiChitty Chat 로드, 도달 실패 시 상태화면+재시도, 오프라인 배너, online 복귀 자동 재시도
-- [ ] **접속→로그인→채팅 끝단 동선** — config-only 경로로 재확인 (세션 유지: `wc_token` HttpOnly 쿠키 + `GET /me` 복원)
+- [ ] **접속→로그인→채팅 끝단 동선** — 로그인 성공 이후 구간 미검증 (세션 유지: `wc_token` HttpOnly 쿠키 + `GET /me` 복원). *로그인 화면 렌더까지는 2026-08-10 확인*
+- [ ] **OS 수준 실제 오프라인** — 2026-08-10 검증의 오프라인 분기는 `navigator.onLine` 오버라이드였다(CDP 오프라인 에뮬레이션이 `navigator.onLine`을 뒤집지 않아서). 실제 네트워크 해제 시 동작은 미확인
+- [ ] **모바일 preflight/CSP 동등 검증** — Android/iOS 웹뷰에서도 preflight `fetch`가 막히는지. Electron에서 터진 문제라 웹뷰별 확인 필요
+- [ ] **Electron 창이 화면에 안 보이는 문제** — 두 디스플레이 어디에도 미표시(`windowStateKeeper` 저장 좌표가 화면 밖일 가능성). 원인 미확인·재현조건 미정. *CDP로 렌더러에 직접 붙어 검증은 진행했음*
 - [ ] **Android 실기** — 첫 화면에서 원격으로 자동접속(`location.replace`로 셸 미잔류 확인). 하드웨어 뒤로가기 정책은 CE4-S1
 - [ ] **iOS** — 자동접속 동선 (iOS 빌드환경 확보 후, CE0-S6/CE2-S3)
 - [ ] **로그인 후 채팅 기능 전반** — 메시지 송수신·방 진입·DM 등 뷰어 통과 확인(기능 자체는 서버 책임)
@@ -15,6 +17,16 @@
 
 ## 최근 완료 (2026-08-10)
 
+- **Desktop/Electron 실기 재검증 + CSP 버그 2건 발견·수정** — `electron/src/setup.ts` `setupContentSecurityPolicy()` 한 곳이 원인. 기본 템플릿이 "로컬 자산 전용 앱"을 전제로 쓴 코드라 **원격 웹을 띄우는 뷰어**라는 이 앱의 전제와 어긋나 있었다. → `CE1-S3`·`CE1-S5` 실기 근거 확보
+  - **버그① 원격 자산 전멸** — `onHeadersReceived`가 세션 전역이라 원격 서버 응답의 CSP까지 커스텀 스킴 전용 정책으로 **대체**. 서버가 보낸 `default-src 'self' …`가 사라져 `chat.css`·`chat.js`·`socket.io.js`가 전부 차단 → 화면 무스타일·실시간 채팅 미동작. **수정**: 커스텀 스킴 응답에만 CSP 적용, 원격 응답은 서버 CSP 존중
+  - **버그② preflight 차단** — 셸 CSP에 `connect-src`가 없어 `default-src`로 폴백 → `web/app.js`의 도달성 점검 `fetch`가 CSP에 막힘. **서버가 살아 있어도 항상 "연결할 수 없습니다"**. `preflight()`가 실패를 `.catch(() => false)`로 삼켜 CSP 차단과 서버 다운이 구분되지 않았다. **수정**: `connect-src`에 config 서버 오리진만 허용
+  - **오리진 파생 방식(B-1 채택)** — 메인 프로세스가 `app/config.js`를 읽어 오리진 추출. ⚠️ **스킴 보정 규칙이 `web/app.js`의 `defaultSchemeFor()`/`normalize()`와 반드시 같아야 한다** — 갈리면 `connect-src`가 어긋나 preflight가 조용히 막힌다(`setup.ts`에 주석 명시)
+  - **검증**: 자동접속 PASS(수동개입 0, 셸 → 원격 이동) · 원격 자산 로드 PASS(`chat.css` 142룰) · CSP 헤더 실물 확인(셸=서버 오리진 1개만, 원격=서버 원본 그대로) · `npm run lint` OK · 셸 스모크 9/9 PASS(회귀 없음)
+  - **셸 스모크가 못 잡는 종류**였음 — 목 `fetch`에는 CSP가 없어 preflight가 항상 의도대로 동작한다. 실기에서만 드러남
+- **CE1 데스크톱 동선 실기검증 완결**(2026-08-10) — 자동접속 · 도달실패(상태화면+재시도) · 오프라인(전용 메시지+배너) · online 복귀 자동 재시도 **4건 모두 PASS**. CSP 수정 후 기준
+  - 두 분기가 서로 다른 메시지를 정확히 냄을 확인: 네트워크 계층 차단 → `서버에 연결할 수 없습니다`(배너 없음) / `navigator.onLine=false` → `네트워크 연결이 없습니다`(배너 노출)
+  - **검증 범위 명시** — 네트워크 차단은 실제 차단(CDP `emulateNetworkConditions`), 오프라인 분기는 `navigator.onLine` 오버라이드. Electron의 CDP 오프라인 에뮬레이션이 `navigator.onLine`을 뒤집지 않아 나눠 검증했다(에뮬레이션 한계이지 앱 문제 아님)
+- **서버 변경의 클라 반영 특성 확인** — 서버만 고치면 **다음 실행에서 즉시 반영**된다(재빌드·재배포 불요). 근거: HTML·`chat.css`·`chat.js` 전부 `Cache-Control: no-cache` + `ETag`(매 로드 재검증), Service Worker·manifest **0건**. 예외 = 클라 재배포 필요: **주소/도메인 변경**(`web/config.js` — B-1 이후 Electron `connect-src`도 이 값에서 파생되므로 여기 한 곳만 고치면 따라옴) · `allowNavigation`(G-DOM 후) · 푸시(CE4-S5)·첨부(CE4-S3)·딥링크(CE4-S4) 등 네이티브 기능 · 셸 자체 UI(`web/`)
 - **git 저장소 확정** — private GitHub `HohyeonKim592/heichitty-chat-client` 생성(default `main`) + 초기 임포트 단일 커밋 `460d89f`(83 files). 브랜치 모델 = `Hohyeon.Kim`에서 작업 → `main` 병합(형제 chitty 리포 관례 승계). → `CE0-S2` 완료
 - **appId 확정** `kr.co.heichitty.chat` — android 네이티브 패키지까지 반영. → `CE3-S1` 완료 · **G-ID 통과**
 - **`www` 잔재 정리** — `electron/src/setup.ts` 주석의 `www/config.js` → `web/config.js` (6/22 폴더 리네임 누락분, 동작 영향 없음)
@@ -30,6 +42,7 @@
 
 ## 다음 작업 (참고)
 
-- 수동·실기 재검증 (위 검증 후보 — Desktop/Electron 우선)
+- 수동·실기 재검증 (위 검증 후보 — 시나리오 A 재검증·오프라인 동선 우선)
 - Wave 0 남은 결정: 운영 도메인(G-DOM)·배포 채널(G-DIST) — G-DOM 정해지면 `web/config.js`+`allowNavigation` 동시 교체
+- **G-DOM 확정 시 `connect-src` 파생원 격상 검토(B-1′)** — 지금은 `app/config.js` 정규식 파싱이라 `web/app.js`와 스킴 보정 규칙이 갈릴 위험이 있다. `capacitor.config.json`의 `allowNavigation`(현재 `["*"]`)이 운영 도메인으로 좁혀지면 그쪽에서 파생하도록 바꿔 파싱·규칙 중복을 없앨 수 있다(`index.ts`가 이미 `capacitorFileConfig`를 보유)
 - CE6-S4: pre-push 훅(lint+smoke 자동화) — 원격이 생겨 착수 가능

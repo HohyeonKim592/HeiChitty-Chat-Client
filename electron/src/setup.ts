@@ -10,6 +10,7 @@ import { app, BrowserWindow, Menu, MenuItem, nativeImage, Tray, session } from '
 import electronIsDev from 'electron-is-dev';
 import electronServe from 'electron-serve';
 import windowStateKeeper from 'electron-window-state';
+import { readFileSync } from 'fs';
 import { join } from 'path';
 
 // Define components for a watcher to detect when the webapp is changed so we can reload in Dev mode.
@@ -222,17 +223,60 @@ export class ElectronCapacitorApp {
 }
 
 // Set a CSP up for our application based on the custom scheme
+//
+// 이 앱은 원격 HeiChitty Chat 웹을 띄우는 뷰어다 — 로컬 자산만 쓰는 기본 템플릿과 전제가 다르다.
+// onHeadersReceived 는 세션 전역이라, 템플릿 그대로 두면 원격 서버 응답의 CSP 까지
+// 커스텀 스킴 전용 정책으로 '대체'해 버린다. 그 결과 서버 자신의 CSS·JS·socket.io 가
+// 전부 차단되어 화면이 무스타일로 깨지고 실시간 채팅이 동작하지 않는다(2026-08-10 실기 확인).
+// → CSP 는 로컬 셸(커스텀 스킴) 응답에만 적용하고, 원격 응답은 서버가 보낸 CSP 를 존중한다.
+//   (서버는 이미 default-src 'self' 등 엄격한 CSP 를 자체 전송한다)
 export function setupContentSecurityPolicy(customScheme: string): void {
+  // 셸의 preflight(도달성 사전 점검) fetch 대상 오리진. connect-src 는 default-src 로
+  // 폴백되므로, 이 값을 명시하지 않으면 preflight 가 CSP 에 막혀 서버가 살아 있어도
+  // 항상 "연결할 수 없습니다" 가 된다(2026-08-10 실기 확인).
+  const serverOrigin = readShellServerOrigin();
+  const connectSrc = [`${customScheme}://*`, serverOrigin].filter(Boolean).join(' ');
+
   session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
+    if (!details.url.startsWith(`${customScheme}://`)) {
+      callback({});
+      return;
+    }
+    const defaultSrc = electronIsDev
+      ? `default-src ${customScheme}://* 'unsafe-inline' devtools://* 'unsafe-eval' data:`
+      : `default-src ${customScheme}://* 'unsafe-inline' data:`;
     callback({
       responseHeaders: {
         ...details.responseHeaders,
-        'Content-Security-Policy': [
-          electronIsDev
-            ? `default-src ${customScheme}://* 'unsafe-inline' devtools://* 'unsafe-eval' data:`
-            : `default-src ${customScheme}://* 'unsafe-inline' data:`,
-        ],
+        'Content-Security-Policy': [`${defaultSrc}; connect-src ${connectSrc}`],
       },
     });
   });
+}
+
+// 셸 config(app/config.js) 의 서버 주소를 메인 프로세스에서 읽어 오리진만 뽑는다.
+//
+// ⚠️ 스킴 보정 규칙은 web/app.js 의 defaultSchemeFor()/normalize() 와 **반드시 같아야** 한다.
+//    (config.js 에 스킴 없이 호스트만 적을 수 있고, 그때 렌더러가 고르는 스킴과 여기서
+//     고르는 스킴이 갈리면 connect-src 가 어긋나 preflight 가 조용히 막힌다)
+//    web/app.js 의 해당 규칙을 고치면 이 함수도 함께 고칠 것. SSOT 는 web/config.js 한 줄.
+function readShellServerOrigin(): string | null {
+  try {
+    const raw = readFileSync(join(app.getAppPath(), 'app', 'config.js'), 'utf8');
+    const matched = raw.match(/HEICHITTY_SERVER\s*=\s*["']([^"']*)["']/);
+    if (!matched) return null;
+
+    let s = matched[1].trim();
+    if (!s) return null;
+    if (!/^https?:\/\//i.test(s)) {
+      const isLoopback = /^(localhost|127\.\d+\.\d+\.\d+|0\.0\.0\.0|\[?::1\]?)(:|\/|$)/i.test(s);
+      s = (isLoopback ? 'http://' : 'https://') + s;
+    }
+    const u = new URL(s);
+    if (u.protocol !== 'http:' && u.protocol !== 'https:') return null;
+    return u.origin;
+  } catch {
+    // config 누락·형식 변경 등. 셸이 상태화면에서 안내하므로 여기선 조용히 포기한다.
+    return null;
+  }
 }
