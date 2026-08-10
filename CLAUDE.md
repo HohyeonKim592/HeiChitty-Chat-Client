@@ -34,10 +34,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 - **브랜치 모델** — 원격은 private `HohyeonKim592/heichitty-chat-client`(default `main`). 작업은 **`Hohyeon.Kim` 브랜치**에서 하고 완료분만 `main`에 병합한다(형제 chitty 리포 관례).
 
-## 7. 진행 가시화 (Task 목록)
-- **3단계 이상 멀티스텝 작업은 항상 Task 도구로 진행 상태를 표시**한다 — `TaskCreate`로 등록, 시작 시 `in_progress`, 끝나면 `completed`.
-- **각 단계 완료마다 한 줄이라도 텍스트로 "X 완료" 보고** — 도구 출력만으로 끝내지 말 것.
-- 단일·자명한 작업(1~2스텝)은 생략.
+## 7. 진행 가시화 (Task 목록) → 공통 원칙 §8
+> 이 경로에서 쓰던 조항이 2026-08-10 공통 원본 **§8**로 승격되어 전 프로젝트에 적용된다. 내용은 원본이 정본 — 여기서 중복 기술하지 않는다.
 
 ## 아키텍처 개요 (big picture)
 
