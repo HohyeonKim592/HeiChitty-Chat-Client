@@ -23,9 +23,10 @@
   - **오리진 파생 방식(B-1 채택)** — 메인 프로세스가 `app/config.js`를 읽어 오리진 추출. ⚠️ **스킴 보정 규칙이 `web/app.js`의 `defaultSchemeFor()`/`normalize()`와 반드시 같아야 한다** — 갈리면 `connect-src`가 어긋나 preflight가 조용히 막힌다(`setup.ts`에 주석 명시)
   - **검증**: 자동접속 PASS(수동개입 0, 셸 → 원격 이동) · 원격 자산 로드 PASS(`chat.css` 142룰) · CSP 헤더 실물 확인(셸=서버 오리진 1개만, 원격=서버 원본 그대로) · `npm run lint` OK · 셸 스모크 9/9 PASS(회귀 없음)
   - **셸 스모크가 못 잡는 종류**였음 — 목 `fetch`에는 CSP가 없어 preflight가 항상 의도대로 동작한다. 실기에서만 드러남
-- **CE1 데스크톱 동선 실기검증 완결**(2026-08-10) — 자동접속 · 도달실패(상태화면+재시도) · 오프라인(전용 메시지+배너) · online 복귀 자동 재시도 **4건 모두 PASS**. CSP 수정 후 기준
-  - 두 분기가 서로 다른 메시지를 정확히 냄을 확인: 네트워크 계층 차단 → `서버에 연결할 수 없습니다`(배너 없음) / `navigator.onLine=false` → `네트워크 연결이 없습니다`(배너 노출)
-  - **검증 범위 명시** — 네트워크 차단은 실제 차단(CDP `emulateNetworkConditions`), 오프라인 분기는 `navigator.onLine` 오버라이드. Electron의 CDP 오프라인 에뮬레이션이 `navigator.onLine`을 뒤집지 않아 나눠 검증했다(에뮬레이션 한계이지 앱 문제 아님)
+- **CE1 데스크톱 동선 실기검증 완결**(2026-08-10) — 자동접속 · 도달실패(상태화면+재시도) · **재시도→접속** · 오프라인(전용 메시지+배너) · online 복귀 자동 재시도 **전 시나리오 PASS**. CSP 수정 후 기준
+  - **도달실패·재시도는 서버를 실제로 정지·재기동시켜 검증**. 콜드 부팅 시 셸 유지+상태화면, 콘솔은 `ERR_CONNECTION_REFUSED`이고 **CSP refusal 0건** — 상태화면이 *옳은 이유로* 뜬다(수정 전엔 같은 화면이 CSP 차단 탓이었다). 서버 재기동 후 재시도 클릭 → **앱 재시작 없이** 원격 이동, `chat.css` 142룰 + `io` 전역 정의됨(**socket.io 로드 확인**)
+  - 두 분기가 서로 다른 메시지를 정확히 냄을 확인: 도달 불가 → `서버에 연결할 수 없습니다`(배너 없음) / `navigator.onLine=false` → `네트워크 연결이 없습니다`(배너 노출)
+  - **검증 범위 명시** — 오프라인 분기만 `navigator.onLine` 오버라이드로 검증했다. Electron의 CDP 오프라인 에뮬레이션이 `navigator.onLine`을 뒤집지 않아 그 방법으론 해당 분기를 못 태운다(에뮬레이션 한계이지 앱 문제 아님)
 - **서버 변경의 클라 반영 특성 확인** — 서버만 고치면 **다음 실행에서 즉시 반영**된다(재빌드·재배포 불요). 근거: HTML·`chat.css`·`chat.js` 전부 `Cache-Control: no-cache` + `ETag`(매 로드 재검증), Service Worker·manifest **0건**. 예외 = 클라 재배포 필요: **주소/도메인 변경**(`web/config.js` — B-1 이후 Electron `connect-src`도 이 값에서 파생되므로 여기 한 곳만 고치면 따라옴) · `allowNavigation`(G-DOM 후) · 푸시(CE4-S5)·첨부(CE4-S3)·딥링크(CE4-S4) 등 네이티브 기능 · 셸 자체 UI(`web/`)
 - **git 저장소 확정** — private GitHub `HohyeonKim592/heichitty-chat-client` 생성(default `main`) + 초기 임포트 단일 커밋 `460d89f`(83 files). 브랜치 모델 = `Hohyeon.Kim`에서 작업 → `main` 병합(형제 chitty 리포 관례 승계). → `CE0-S2` 완료
 - **appId 확정** `kr.co.heichitty.chat` — android 네이티브 패키지까지 반영. → `CE3-S1` 완료 · **G-ID 통과**
