@@ -14,6 +14,7 @@
 | 프레임워크 | Capacitor (모바일 네이티브 + 데스크톱 `@capacitor-community/electron`) | ✅ 확정 |
 | 서버 주소 | **빌드 타임 config 고정**(`web/config.js`의 `window.HEICHITTY_SERVER`) · 사용자 비노출(config-only) · 임시 placeholder `http://127.0.0.1:3000` · 운영 도메인 미정 | ✅ 방식 확정 (2026-06-22: 설정가능 URL→config 고정으로 변경) |
 | 부가기능 v1 | **푸시 알림(CE4)·자동 업데이트(CE5) 포함** | ✅ 확정 |
+| git 저장소·브랜치 | private GitHub `HohyeonKim592/heichitty-chat-client` · `Hohyeon.Kim`(작업) → `main`(기본) 병합 — 형제 chitty 리포 관례 승계 | ✅ 확정 (2026-08-10) |
 | 모바일 배포 채널 | 사내배포 vs 공개 스토어 — **미정** | 🔴 G-DIST 보류 |
 
 ## EPIC 개요
@@ -36,7 +37,7 @@
 
 ### CE0 — 프로젝트 골격
 - [x] `CE0-S1` Capacitor scaffold — `package.json`·`capacitor.config.json`·core/cli 설치
-- [x] `CE0-S2` git 저장소 init (브랜치·원격·커밋 모델은 미정)
+- [x] `CE0-S2` git 저장소 — init + **원격·브랜치·커밋 모델 확정(2026-08-10)**: private GitHub `HohyeonKim592/heichitty-chat-client`(default `main`) · `Hohyeon.Kim`에서 작업 후 `main` 병합 · 초기 임포트 단일 커밋 `460d89f`(83 files)
 - [x] `CE0-S3` 웹 셸 런처 `web/` — `index.html`/`app.js`/`style.css`, 외부화·XSS-safe(`textContent`)
 - [x] `CE0-S4` Android 플랫폼 추가 (`cap add android`)
 - [x] `CE0-S5` Desktop(Electron) 플랫폼 추가 — `cap add @capacitor-community/electron` · `npm run build` 통과(`skipLibCheck`) · 뷰어용 네비게이션 완화(`isAllowedTarget`)
@@ -80,13 +81,13 @@
 - [x] `CE6-S1` lint — 셸 JS 구문 검사 (`npm run lint` = `node --check web/app.js`)
 - [x] `CE6-S2` **셸 로직 스모크** — `test/ce1-shell.mjs`(zero-dep, DOM 목으로 실제 `app.js` 구동): config 정규화·자동접속(`location.replace`)·오프라인·preflight 실패·재시도·online 자동재시도 = **9/9 PASS** (`npm test` = `npm run smoke`)
 - [ ] `CE6-S3` 4플랫폼 빌드 검증 — android assemble · electron build · (가능 시 iOS)
-- [ ] `CE6-S4` pre-push 훅 — lint+스모크 (HeiChitty Chat E0-S3 관례 승계)
+- [ ] `CE6-S4` pre-push 훅 — lint+스모크 (HeiChitty Chat E0-S3 관례 승계). *CE0-S2로 원격이 생겨 착수 가능*
 
 ## 결정 게이트
 
 | 게이트 | 시점/Story | 통과 기준 | 비고 |
 |---|---|---|---|
-| **G-ID** appId 확정 | CE3-S1 (배포 전) | 정식 번들 ID 확정 | Android 패키지명·iOS Bundle ID 공용 |
+| **G-ID** appId 확정 | CE3-S1 (배포 전) | 정식 번들 ID 확정 | ✅ 통과 — `kr.co.heichitty.chat`(2026-08-10). Android 패키지명·iOS Bundle ID 공용 |
 | **G-DOM** 허용 도메인 | CE3-S2 | `allowNavigation`을 운영 도메인으로 한정 | 현재 `["*"]` 광역 |
 | **G-IOS** iOS 빌드환경 | CE0-S6/CE2-S3 | Mac+Xcode+CocoaPods 확보, `cap add ios` 성공 | 현 머신 부재 |
 | **G-SIGN** 코드 서명 | CE2-S2/S3 | Android keystore · Apple 인증서 · 데스크톱 서명 | 배포 산출물 필수 |
@@ -94,7 +95,7 @@
 
 ## 진행 순서 (Wave)
 
-- **Wave 0 〔결정〕** G-ID(appId)·G-DOM(도메인)·G-DIST(배포채널) 방향 못 박기
+- **Wave 0 〔결정〕** ~~G-ID(appId)~~ ✅ 통과(2026-08-10) · G-DOM(도메인)·G-DIST(배포채널) 방향 못 박기
 - **Wave 1** CE1 뷰어 코어 완성(config-only: S1' config 주입·S3 연결실패·S5 로딩) + CE3 구성·브랜딩(appId·allowNavigation 좁히기·아이콘/스플래시/표시명)
 - **Wave 2** CE0-S6 iOS 추가 + CE2 플랫폼 빌드·서명(Desktop→Android→iOS)
 - **Wave 3** CE4 네이티브 통합·푸시 + CE5 자동 업데이트

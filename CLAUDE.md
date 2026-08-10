@@ -41,6 +41,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **모든 git 상태변경(commit / push / branch / merge / rebase / tag)은 사용자 명시 지시가 있을 때만** 수행. 지시 없이 자동 commit·push 금지.
 - `git status` / `log` / `diff` 등 **읽기 전용 조회는 자유**.
 - 커밋 시 무관한 변경 쓸어담지 말 것 — 지시된 파일만 `git add <명시 경로>` (`-A` / `.` 금지). 커밋 전 `git diff --cached --name-only`로 대상 확인.
+- **브랜치 모델** — 원격은 private `HohyeonKim592/heichitty-chat-client`(default `main`). 작업은 **`Hohyeon.Kim` 브랜치**에서 하고 완료분만 `main`에 병합한다(형제 chitty 리포 관례).
 - **main 직접 작업 금지** — 사용자가 "main 대상"이라 명시한 경우만.
 - `push --force` / `reset --hard` / `clean -f` 등 destructive 작업은 main 아니어도 **한 번 더 확인**.
 - **AI 저작 흔적 금지** — 커밋 메시지·파일 내용에 `Claude`/`Claude Code`/AI co-author 표기 쓰지 않는다. 중립/사람 값 사용하거나 비움.
