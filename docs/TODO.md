@@ -17,10 +17,18 @@
 - [ ] **로그인 후 채팅 기능 전반** — 메시지 송수신·방 진입·DM 등 뷰어 통과 확인(기능 자체는 서버 책임)
 - [ ] **Android/iOS 빌드 산출물 실행**(CE2) — http 서버 접속 시 cleartext/ATS 설정 필요(CE3)
 
+## 최근 완료 (2026-08-11)
+
+- **산출물 관리 체계 정비** — 플랫폼별 분리 + 빌드 시마다 폐기분 자동 처리. 상세는 `spec/02-epic-story.md` `CE2-S0`
+  - `release/{mac,win,android,ios}/` 최신 1벌 · `release/_archive/<os>/<버전>-<시각>/` 직전 `KEEP`벌(기본 2, 환경변수 조정)
+  - `scripts/build-desktop.sh <mac|win>` — 정리 → sync → tsc → 패키징 → 중간산출물 삭제. electron-builder 호출 함정 2개를 구조적으로 차단
+  - `scripts/collect-mobile.sh <android|ios>` — gradle·Xcode 산출물을 `release/` 아래로 수집. **iOS는 플랫폼 미추가라 ipa 경로를 인자로 받는다**(`CE2-S3` 때 자동 탐색으로 전환)
+  - 폐기분 332MB 삭제 → `release/` 576MB → 244MB
+
 ## 최근 완료 (2026-08-10)
 
 - **CE2-S1 데스크톱 설치파일 생성 완료(미서명)** — Mac universal dmg + Windows x64 NSIS exe. 결정 반영: 공개 배포 지향 · Intel Mac 포함 · 이 Mac에서 Windows까지 · 인증서 없음 · 버전 SSOT `0.0.1`(발매 시 1.0.0 승격)
-  - **배포 산출물 경로 = 저장소 루트 `release/`** (`directories.output: "../release"`). `electron/`은 Capacitor 재생성 영역이라 그 밖으로 뺐다. `.gitignore` 처리
+  - **배포 산출물 경로 = 저장소 루트 `release/<os>/`** (`directories.output: "../release/${os}"`, 2026-08-11 분리). `electron/`은 Capacitor 재생성 영역이라 그 밖으로 뺐다. `.gitignore` 처리
   - **wine 별도 설치 불필요** — electron-builder가 자체 번들 `wine-4.0.1-mac`을 자동 내려받아 처리. Rosetta·Homebrew 개입 없었음
   - 템플릿 기본값이 전부 남아 있던 것을 정리: `appId com.yourdoamnin.yourapp` → `kr.co.heichitty.chat`, `productName` 신규(없으면 표시명이 패키지명으로 나옴), `mac.category`, 버전 `1.0.0` → `0.0.1`
   - **호출 함정 2개** — ① `--mac dmg`처럼 타깃을 CLI로 주면 config의 `arch:["universal"]`이 덮여 host arch로만 나온다(`--mac`만 줄 것) ② `npm run electron:make`는 `-p always`라 GitHub 업로드를 시도한다(`-p never` 쓸 것)

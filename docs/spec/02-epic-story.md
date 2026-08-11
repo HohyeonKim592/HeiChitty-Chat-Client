@@ -62,10 +62,17 @@
 ### CE2 — 플랫폼 빌드·배포
 - [x] `CE2-S1` **Desktop 설치파일** — 2026-08-10 Win/Mac 산출물 생성·실행 검증 완료(**미서명**)
   - 산출물: `HeiChitty Chat-0.0.1-universal.dmg`(172MB, x86_64+arm64) · `HeiChitty Chat Setup 0.0.1.exe`(79MB, x64)
-  - **저장 경로 = 저장소 루트 `release/`** (`directories.output: "../release"`). `electron/`은 Capacitor가 재생성하는 영역이라 배포물을 그 밖에 둔다. `.gitignore` 처리됨
+  - **저장 경로 = 저장소 루트 `release/<os>/`** (`directories.output: "../release/${os}"` — 2026-08-11 플랫폼 분리). `electron/`은 Capacitor가 재생성하는 영역이라 배포물을 그 밖에 둔다. `.gitignore` 처리됨
+  - **빌드는 `scripts/build-desktop.sh <mac|win>`으로** — 정리 → sync → tsc → 패키징 → 중간산출물 삭제를 한 번에. 아래 호출 함정 2개를 구조적으로 막는다
   - **Windows 빌드에 wine 별도 설치 불필요** — electron-builder가 자체 번들 `wine-4.0.1-mac`을 자동 내려받아 이 Mac에서 처리
-  - 호출 시 주의: `--mac dmg`처럼 타깃을 CLI로 주면 config의 `arch: ["universal"]`이 덮여 host arch로만 나온다. **`--mac`/`--win`만 주고 arch는 config에 맡길 것**
+  - 수기 호출 시 주의: `--mac dmg`처럼 타깃을 CLI로 주면 config의 `arch: ["universal"]`이 덮여 host arch로만 나온다. **`--mac`/`--win`만 주고 arch는 config에 맡길 것**
   - `npm run electron:make`는 `-p always`라 **GitHub 업로드를 시도**한다. 산출물만 원하면 `-p never`
+- [x] `CE2-S0` **산출물 관리 체계** — 2026-08-11. 플랫폼별 분리 + 빌드 시마다 폐기분 자동 처리
+  - `release/{mac,win,android,ios}/` 최신 1벌 · `release/_archive/<os>/<버전>-<시각>/` 직전 `KEEP`벌(기본 2)
+  - 데스크톱은 `${os}` 매크로가, 모바일(gradle·Xcode 산출물)은 `scripts/collect-mobile.sh <android|ios>` 수집이 담당
+  - 언팩 앱 번들(`mac-arm64/` 237MB)·아이콘 캐시는 재생성 가능한 중간산출물이라 아카이브 없이 빌드 직후 삭제
+  - iOS는 플랫폼 미추가로 Xcode export 경로가 미확정 — ipa 경로를 인자로 받는다. `CE2-S3` 때 자동 탐색으로 전환할 것
+  - 착수 시점 정리: 폐기분 332MB 삭제(arch 덮임 실패분 `-arm64.dmg` + `mac-arm64/`) → `release/` 576MB → 244MB
 - [ ] `CE2-S2` **Android 서명 빌드** — release keystore + AAB/APK 〔G-SIGN〕
 - [ ] `CE2-S3` **iOS 빌드·서명** — Xcode 프로젝트(CE0-S6 후) + Apple 개발자계정·프로비저닝 〔G-IOS·G-SIGN〕
 - [ ] `CE2-S4` 배포 채널 확정·산출물 정의 〔G-DIST〕

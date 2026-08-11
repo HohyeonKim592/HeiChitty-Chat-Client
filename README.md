@@ -58,20 +58,17 @@ npm run electron:start-live
 # 또는 디버거 포함 단발 실행
 npm run electron:start
 
-# 배포 패키지 빌드 — 반드시 sync → build → builder 순서
-npx cap sync @capacitor-community/electron    # web/ → electron/app/
-cd electron && npm run build                   # tsc → electron/build/src/
-
-npx electron-builder --mac -c ./electron-builder.config.json -p never   # macOS universal dmg
-npx electron-builder --win -c ./electron-builder.config.json -p never   # Windows x64 NSIS exe
+# 배포 패키지 빌드 — 저장소 루트에서
+./scripts/build-desktop.sh mac    # macOS universal dmg
+./scripts/build-desktop.sh win    # Windows x64 NSIS exe
 ```
 
-**산출물은 저장소 루트 `release/`에 생깁니다** (`directories.output: "../release"`).
-`electron/`은 Capacitor가 재생성하는 영역이라 배포물을 그 밖에 둡니다. `.gitignore` 처리돼 있습니다.
+빌드 스크립트가 **정리 → sync → tsc → 패키징 → 중간산출물 삭제**를 한 번에 처리합니다.
+산출물은 `release/mac/`·`release/win/`에 생깁니다 — [산출물 관리](#산출물-관리-release) 참조.
 
-> **호출 함정 2가지 (2026-08-10 실측)**
+> **수기로 `electron-builder`를 직접 부를 때의 함정 2가지 (2026-08-10 실측)** — 스크립트는 이 둘을 막아 둡니다.
 > - `--mac dmg`처럼 **타깃까지 CLI로 주면** config의 `arch: ["universal"]`이 덮여 host 아키텍처로만 나옵니다. **`--mac`/`--win`만 주고 arch는 config에 맡기세요.**
-> - `npm run electron:make`는 `-p always`라 **GitHub 릴리스 업로드를 시도**합니다. 로컬 산출물만 원하면 위처럼 `-p never`를 쓰세요.
+> - `npm run electron:make`는 `-p always`라 **GitHub 릴리스 업로드를 시도**합니다. 로컬 산출물만 원하면 `-p never`를 쓰세요.
 
 > **Windows 빌드는 이 Mac에서 됩니다** — electron-builder가 자체 번들 wine(`wine-4.0.1-mac`)을 자동으로 내려받아 처리하므로 wine을 따로 설치할 필요가 없습니다.
 
@@ -91,7 +88,13 @@ CLI로 디버그 APK만 뽑으려면:
 ```bash
 cd android
 ./gradlew assembleDebug
-# 산출물: android/app/build/outputs/apk/debug/app-debug.apk
+# gradle 산출물: android/app/build/outputs/apk/debug/app-debug.apk
+```
+
+빌드한 apk·aab를 `release/android/`로 모으려면:
+
+```bash
+./scripts/collect-mobile.sh android
 ```
 
 ---
@@ -106,7 +109,46 @@ npx cap sync ios
 npx cap open ios         # Xcode 열기 → 서명 설정 후 Run/Archive
 ```
 
+Xcode에서 Archive → Distribute App으로 export한 ipa를 `release/ios/`로 모으려면:
+
+```bash
+./scripts/collect-mobile.sh ios <ipa 경로>
+```
+
+> iOS는 플랫폼이 아직 추가되지 않아 Xcode의 export 경로가 확정되지 않았습니다. 그래서 경로를 인자로 받습니다.
+> 플랫폼 추가 후 경로가 고정되면 android처럼 자동 탐색으로 바꿉니다.
+
 정식 배포 시 Apple 개발자 계정과 코드 서명이 별도로 필요합니다.
+
+---
+
+## 산출물 관리 (`release/`)
+
+배포 산출물은 **저장소 루트 `release/` 아래 플랫폼별로** 분리됩니다. `electron/`은 Capacitor가 재생성하는 영역이라 배포물을 그 밖에 둡니다. `release/` 전체가 `.gitignore` 처리돼 있습니다.
+
+```
+release/
+├── mac/        HeiChitty Chat-0.0.1-universal.dmg · blockmap · latest-mac.yml
+├── win/        HeiChitty Chat Setup 0.0.1.exe · blockmap · latest.yml
+├── android/    app-debug.apk · app-release.aab      (collect-mobile.sh 로 수집)
+├── ios/        *.ipa                                 (collect-mobile.sh 로 수집)
+└── _archive/
+    ├── mac/0.0.1-20260810-220354/       직전 산출물
+    └── win/…                            KEEP개까지 보관, 초과분 자동 폐기
+```
+
+데스크톱의 플랫폼 분리는 electron-builder 설정 한 줄이 담당합니다 — `directories.output: "../release/${os}"` (`${os}`는 `mac`/`win`/`linux`로 확장).
+
+**폐기 정책** — 두 스크립트 모두 빌드/수집 시작 시 기존 산출물을 `_archive/<플랫폼>/<버전>-<시각>/`으로 옮기고, 보관 개수를 넘는 오래된 것을 지웁니다. 기본 2벌이며 `KEEP`으로 조정합니다:
+
+```bash
+KEEP=3 ./scripts/build-desktop.sh mac     # 3벌 보관
+KEEP=0 ./scripts/build-desktop.sh mac     # 보관 없이 매번 폐기
+```
+
+언팩 앱 번들(`mac-arm64/`, `win-unpacked/`)과 아이콘 변환 캐시(`.icon-icns/`)는 dmg/exe가 있으면 재생성 가능한 중간산출물이라 **아카이브하지 않고 빌드 직후 삭제**합니다. mac 언팩본만 237MB였습니다.
+
+용량 기준: dmg 164MB + exe 80MB ≈ 1벌 244MB. 기본 `KEEP=2`면 최신 1벌 + 보관 2벌 = 최대 약 730MB.
 
 ---
 

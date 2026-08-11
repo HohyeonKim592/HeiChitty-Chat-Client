@@ -3,7 +3,7 @@
   "productName": "HeiChitty Chat",
   "directories": {
     "buildResources": "resources",
-    "output": "../release"
+    "output": "../release/${os}"
   },
   "files": [
     "assets/**/*",
