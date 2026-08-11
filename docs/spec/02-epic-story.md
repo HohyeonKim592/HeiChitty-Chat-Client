@@ -146,6 +146,7 @@
 - [ ] **OS 수준 실제 오프라인** — 위 범위 명시 참조
 - [ ] **dmg/exe 실제 설치 테스트** — 산출물 생성·기동은 확인했으나 설치 과정(dmg 마운트→드래그, NSIS 설치 마법사)은 미검증. **미서명이라 Gatekeeper·SmartScreen 경고가 뜬다**
 - [ ] **Windows 실기 실행** — exe는 이 Mac에서 만들었을 뿐 Windows에서 실행해 보지 않았다
+- [ ] **`${os}` 매크로 실기 검증**(CE2-S0) — `directories.output: "../release/${os}"`가 실제로 `release/mac`·`release/win`을 만드는지 빌드로 미확인. 근거는 electron-builder 소스·문서뿐. 다음 데스크톱 빌드 때 확인
 - [ ] **모바일 preflight/CSP 동등 검증** — Android/iOS 웹뷰에서도 preflight `fetch`가 막히는지
 - [ ] **Android 실기** — 첫 화면에서 원격으로 자동접속(`replace`로 셸 미잔류) · 하드웨어 뒤로가기 정책은 CE4-S1
 - [ ] **iOS** — 자동접속 동선 (iOS 빌드환경 확보 후, CE0-S6/CE2-S3)

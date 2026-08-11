@@ -16,6 +16,11 @@
 - [ ] **iOS** — 자동접속 동선 (iOS 빌드환경 확보 후, CE0-S6/CE2-S3)
 - [ ] **로그인 후 채팅 기능 전반** — 메시지 송수신·방 진입·DM 등 뷰어 통과 확인(기능 자체는 서버 책임)
 - [ ] **Android/iOS 빌드 산출물 실행**(CE2) — http 서버 접속 시 cleartext/ATS 설정 필요(CE3)
+- [ ] **`${os}` 매크로 실기 검증** — `directories.output: "../release/${os}"`가 실제로 `release/mac`·`release/win`을 만드는지는 **아직 빌드로 확인하지 않았다**. 근거는 electron-builder 소스·문서뿐(`packager.ts`의 `// support os and arch macro in output value`). 다음 데스크톱 빌드(`./scripts/build-desktop.sh mac`) 때 확인할 것
+
+## 🔧 정리 후보 (기술부채 — 급하지 않음)
+
+- [ ] **아카이브·prune 함수 중복** — `scripts/build-desktop.sh`와 `scripts/collect-mobile.sh`가 `archive_and_prune()`(각 ~20줄)을 같은 내용으로 갖고 있다. 각 스크립트를 자립형으로 두려고 의도한 중복이지만 드리프트 위험이 있다. `scripts/lib/release-store.sh`로 뽑아 `source`하는 안 — 사용자 판단 대기
 
 ## 최근 완료 (2026-08-11)
 

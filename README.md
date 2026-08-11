@@ -176,8 +176,19 @@ heichitty-chat-client/
 │  ├─ app.js            # config 주소 자동접속·도달성 점검·최상위 네비게이션
 │  └─ style.css
 ├─ capacitor.config.json
+├─ scripts/             # 빌드·산출물 관리
+│  ├─ build-desktop.sh  # mac|win 배포 빌드 (정리→sync→tsc→패키징)
+│  └─ collect-mobile.sh # android|ios 산출물을 release/ 로 수집
+├─ test/
+│  └─ ce1-shell.mjs     # CE1 셸 스모크 (zero-dep, npm test)
+├─ docs/
+│  ├─ TODO.md           # 작업 큐·남은 검증 후보
+│  └─ spec/02-epic-story.md  # 단계화 로드맵(EPIC·STORY·게이트)
 ├─ android/             # Capacitor 생성 (cap add android)
 ├─ electron/            # Capacitor 생성 (cap add @capacitor-community/electron)
 │  └─ src/setup.ts      # 데스크톱 네비게이션 허용 정책 (뷰어용으로 완화됨)
+├─ release/             # 배포 산출물 (gitignore — 위 「산출물 관리」 참조)
 └─ CLAUDE.md            # 작업원칙
 ```
+
+> `ios/`는 아직 없습니다(`npm run add:ios` 미실행 — Xcode·CocoaPods 필요).

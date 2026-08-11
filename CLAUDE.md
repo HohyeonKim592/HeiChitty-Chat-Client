@@ -28,6 +28,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 3. 스코프 — 이 경로의 추가 조항
 - **네이티브 플랫폼 폴더(`android/`, `ios/`, `electron/`)는 Capacitor가 생성한 산출물**이다. `npx cap add`/`cap sync`로 재생성·갱신되는 영역이므로 직접 수정은 최소화하고, 불가피하게 손댈 땐(예: 보안 핸들러 조정) 변경 의도를 주석으로 남긴다.
+- **`release/`는 빌드 산출물 영역**이다. 전체가 `.gitignore` 처리돼 있고 커밋 대상이 아니다. 손으로 파일을 옮기지 말고 `scripts/build-desktop.sh`·`scripts/collect-mobile.sh`가 관리하게 둔다(정책은 `README.md` 「산출물 관리」).
 
 ## 4. Git — 이 경로의 추가 조항
 > 일반 Git 규칙(상태변경은 명시 지시 시에만 · `git add` 명시 경로 · main 직접 작업 금지 · destructive 재확인 · **AI 저작 흔적 금지**)은 **공통 원칙 §3**이 정본이다.
@@ -56,6 +57,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | 구문 검사 (lint) | `npm run lint` — `node --check web/app.js` |
 | 셸 스모크 테스트 | `npm test` (= `npm run smoke` = `node test/ce1-shell.mjs`) |
 | 네이티브에 웹 자산 반영 | `npx cap sync` |
+| 데스크톱 배포 빌드 | `./scripts/build-desktop.sh <mac\|win>` — 정리→sync→tsc→패키징 일괄 |
+| 모바일 산출물 수집 | `./scripts/collect-mobile.sh <android\|ios>` |
 
 - 테스트는 **CE1 스모크 한 벌**(`test/ce1-shell.mjs`)이 전부다. zero-dep — 브라우저 전역(+ `window.HEICHITTY_SERVER`)을 목으로 깔고 `app.js`를 캐시버스트로 재로딩해 config 정규화·자동접속(`location.replace`)·도달성점검·오프라인·재시도를 직접 검증한다. 시나리오 추가는 이 파일에 함수로 붙인다.
 - `app.js`는 import 즉시 top-level에서 `attemptConnect()`를 실행하므로, 테스트는 시나리오마다 전역을 새로 설치한 뒤 모듈을 재로딩한다 — 새 시나리오 작성 시 이 패턴을 따를 것.
@@ -67,6 +70,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | 할 일·남은 검증 후보(작업 큐) | `docs/TODO.md` |
 | 단계화 로드맵(EPIC·STORY·게이트) | `docs/spec/02-epic-story.md` |
 | 4플랫폼 빌드·실행 절차 | `README.md` |
+| 산출물 관리(플랫폼별 분리·아카이브·폐기 정책) | `README.md` 「산출물 관리」 |
+| 빌드·수집 스크립트 | `scripts/build-desktop.sh` · `scripts/collect-mobile.sh` |
 | 뷰어 진입 로직 | `web/app.js` |
 | 서버 주소(빌드 타임 config) | `web/config.js` |
 | Capacitor 설정(appId·webDir·허용도메인) | `capacitor.config.json` |
