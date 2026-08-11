@@ -12,10 +12,13 @@
 |---|---|---|
 | 대상 플랫폼 | Windows · macOS · Android · iOS (단일 Capacitor 코드베이스) | ✅ 확정 |
 | 프레임워크 | Capacitor (모바일 네이티브 + 데스크톱 `@capacitor-community/electron`) | ✅ 확정 |
-| 서버 주소 | **빌드 타임 config 고정**(`web/config.js`의 `window.HEICHITTY_SERVER`) · 사용자 비노출(config-only) · 임시 placeholder `http://127.0.0.1:3000` · 운영 도메인 미정 | ✅ 방식 확정 (2026-06-22: 설정가능 URL→config 고정으로 변경) |
+| 서버 주소 | **빌드 타임 config 고정**(`web/config.js`의 `window.HEICHITTY_SERVER`) · 사용자 비노출(config-only) | ✅ 방식 확정 (2026-06-22: 설정가능 URL→config 고정으로 변경) |
+| 테스트서버 위치 | **Mac mini에서 서버·클라이언트를 같이 실행** → `http://127.0.0.1:3000` 루프백 그대로 사용. LAN·mDNS 주소 불필요 | ✅ 확정 (2026-08-11) |
+| 운영서버 | **추후 도입 가능성 있음** — 도메인 미정. 도입 시 `web/config.js` 한 줄 + `allowNavigation` 교체 후 재빌드(config-only 설계의 이점) | 🟡 보류 |
 | 부가기능 v1 | **푸시 알림(CE4)·자동 업데이트(CE5) 포함** | ✅ 확정 |
 | git 저장소·브랜치 | private GitHub `HohyeonKim592/heichitty-chat-client` · `Hohyeon.Kim`(작업) → `main`(기본) 병합 — 형제 chitty 리포 관례 승계 | ✅ 확정 (2026-08-10) |
-| 모바일 배포 채널 | 사내배포 vs 공개 스토어 — **미정** | 🔴 G-DIST 보류 |
+| 모바일 배포 채널 | **공개 스토어** (Google Play · Apple App Store) | ✅ 확정 (2026-08-11) |
+| 데스크톱 배포 채널 | 공개 스토어 결정은 모바일 한정. Windows/macOS는 **별개로 미정** — GitHub Releases + `electron-updater`(CE5-S1) vs Mac App Store | 🔴 미정 |
 
 ## EPIC 개요
 
@@ -73,13 +76,16 @@
   - 언팩 앱 번들(`mac-arm64/` 237MB)·아이콘 캐시는 재생성 가능한 중간산출물이라 아카이브 없이 빌드 직후 삭제
   - iOS는 플랫폼 미추가로 Xcode export 경로가 미확정 — ipa 경로를 인자로 받는다. `CE2-S3` 때 자동 탐색으로 전환할 것
   - 착수 시점 정리: 폐기분 332MB 삭제(arch 덮임 실패분 `-arm64.dmg` + `mac-arm64/`) → `release/` 576MB → 244MB
-- [ ] `CE2-S2` **Android 서명 빌드** — release keystore + AAB/APK 〔G-SIGN〕
+- [ ] `CE2-S2` **Android 서명 빌드** — release keystore + AAB/APK 〔G-SIGN〕. 공개 스토어 확정(2026-08-11)이라 **Play Console 등록 + AAB 업로드**가 목표 형태
 - [ ] `CE2-S3` **iOS 빌드·서명** — Xcode 프로젝트(CE0-S6 후) + Apple 개발자계정·프로비저닝 〔G-IOS·G-SIGN〕
-- [ ] `CE2-S4` 배포 채널 확정·산출물 정의 〔G-DIST〕
+  - ⚠️ **App Store 심사 리스크(미확인)** — 이 앱은 원격 웹을 그대로 띄우는 뷰어다. Apple 심사지침 **4.2 Minimum Functionality**가 웹 래퍼에 적용되는 사례가 알려져 있어, 공개 App Store를 목표로 하면 이 리스크를 먼저 확인해야 한다. *지침 조항의 존재는 사실이나 이 앱에 실제로 어떻게 적용될지는 미조사 — 심사 전 확인 필요*
+- [~] `CE2-S4` 배포 채널 확정·산출물 정의 〔G-DIST〕 — **채널 확정(2026-08-11): 모바일 = 공개 스토어**(Google Play · App Store)
+  - 남은 것: **데스크톱 채널 미정**(GitHub Releases + `electron-updater` vs Mac App Store — `CE5-S1`과 함께 결정) · 스토어별 산출물 정의(AAB / IPA / dmg / exe) · 스토어 계정 준비(Play Console 등록비 1회 · Apple Developer Program 연간)
 
 ### CE3 — 구성·브랜딩
 - [x] `CE3-S1` **appId 확정** — `kr.co.heichitty.chat` (2026-08-10 확정, android 네이티브 패키지까지 반영) 〔G-ID〕
-- [ ] `CE3-S2` **`allowNavigation` 좁히기** — 현재 `["*"]` → 운영 서버 도메인 한정 〔G-DOM〕. *config-only 결정으로 즉시 진행 가능 — `web/config.js` 도메인과 동일 값으로 좁힐 것*
+- [ ] `CE3-S2` **`allowNavigation` 좁히기** — 현재 `["*"]` → 접속 대상 한정 〔G-DOM〕. *즉시 진행 가능 — `web/config.js`와 동일 값으로 좁힐 것*
+  - **2026-08-11 G-DOM 방향 확정**: 테스트 단계는 같은 Mac mini에서 서버·클라를 함께 돌리므로 대상이 **루프백 `http://127.0.0.1:3000`** 하나다. 즉 `["*"]` → 루프백 한정으로 지금 좁힐 수 있다. 운영서버는 추후 도입 시 같은 자리 한 줄 교체
   - 함께 볼 것: Electron 셸 CSP의 `connect-src`도 같은 오리진을 가리켜야 한다. 지금은 `app/config.js` 정규식 파싱으로 파생하는데, `allowNavigation`이 좁혀지면 **거기서 파생하도록 격상(B-1′)**해 파싱·스킴보정 중복을 없앨 수 있다
 - [ ] `CE3-S3` 앱 아이콘·스플래시 (`@capacitor/assets` 등으로 4플랫폼 생성)
 - [~] `CE3-S4` 표시명·버전·환경(개발/운영) 프로파일 — **데스크톱분 완료(2026-08-10)**: `productName: HeiChitty Chat` · `appId: kr.co.heichitty.chat` · 버전 SSOT **`0.0.1`**(발매 준비 완료 시 1.0.0 승격) · `mac.category: public.app-category.social-networking`. 남은 것: 모바일 표시명, 빌드별 서버 기본값(선택)
@@ -109,14 +115,14 @@
 | 게이트 | 시점/Story | 통과 기준 | 비고 |
 |---|---|---|---|
 | **G-ID** appId 확정 | CE3-S1 (배포 전) | 정식 번들 ID 확정 | ✅ 통과 — `kr.co.heichitty.chat`(2026-08-10). Android 패키지명·iOS Bundle ID 공용 |
-| **G-DOM** 허용 도메인 | CE3-S2 | `allowNavigation`을 운영 도메인으로 한정 | 현재 `["*"]` 광역 |
-| **G-IOS** iOS 빌드환경 | CE0-S6/CE2-S3 | Mac+Xcode+CocoaPods 확보, `cap add ios` 성공 | 현 머신 부재 |
-| **G-SIGN** 코드 서명 | CE2-S2/S3 | Android keystore · Apple 인증서 · 데스크톱 서명 | 배포 산출물 필수 |
-| **G-DIST** 배포 채널 | CE2-S4 | 사내배포 / 공개 스토어 택일 | 🔴 미정 — CE2·CE5-S2 내용 좌우 |
+| **G-DOM** 허용 도메인 | CE3-S2 | `allowNavigation`을 접속 대상으로 한정 | ✅ 방향 확정(2026-08-11) — 테스트는 **같은 Mac mini 루프백 `http://127.0.0.1:3000`**. 운영 도메인은 추후. 좁히기 착수 가능(현재 `["*"]` 광역) |
+| **G-IOS** iOS 빌드환경 | CE0-S6/CE2-S3 | Mac+Xcode+CocoaPods 확보, `cap add ios` 성공 | 🔴 미통과 — **Xcode·CocoaPods 설치 필요**(2026-08-11 확인). Xcode는 용량·라이선스 동의 때문에 **사용자가 직접 설치**해야 한다. 설치 후 `npm run add:ios`부터 진행 |
+| **G-SIGN** 코드 서명 | CE2-S2/S3 | Android keystore · Apple 인증서 · 데스크톱 서명 | 🔴 미정 — **서명 방법 조사 필요**(2026-08-11). 공개 스토어 확정으로 요구사항은 정해졌다: Play 앱 서명/keystore · Apple 인증서+프로비저닝 · (스토어 밖 데스크톱 배포 시) Windows 코드서명. 현재 dmg/exe는 미서명 |
+| **G-DIST** 배포 채널 | CE2-S4 | 사내배포 / 공개 스토어 택일 | ✅ 통과 — **공개 스토어**(2026-08-11, Google Play · Apple App Store). 단 **데스크톱 채널은 별개로 미정** |
 
 ## 진행 순서 (Wave)
 
-- **Wave 0 〔결정〕** ~~G-ID(appId)~~ ✅ 통과(2026-08-10) · G-DOM(도메인)·G-DIST(배포채널) 방향 못 박기
+- **Wave 0 〔결정〕** ~~G-ID(appId)~~ ✅ 통과(2026-08-10) · ~~G-DOM(도메인)~~ ✅ 방향 확정(2026-08-11, 루프백) · ~~G-DIST(배포채널)~~ ✅ 통과(2026-08-11, 공개 스토어) → **남은 결정: G-SIGN(서명 방법 조사) · 데스크톱 배포 채널 · G-IOS(Xcode 설치)**
 - **Wave 1** CE1 뷰어 코어 완성(config-only: S1' config 주입·S3 연결실패·S5 로딩) + CE3 구성·브랜딩(appId·allowNavigation 좁히기·아이콘/스플래시/표시명)
 - **Wave 2** CE0-S6 iOS 추가 + CE2 플랫폼 빌드·서명(Desktop→Android→iOS)
 - **Wave 3** CE4 네이티브 통합·푸시 + CE5 자동 업데이트
@@ -161,3 +167,4 @@
 - **푸시(CE4-S5)** — 서버가 이벤트 발생 시 FCM/APNs로 발송해야 함(HeiChitty Chat 측 작업). 클라는 토큰 등록·수신·라우팅 담당.
 - **첨부(CE4-S3)** — HeiChitty Chat E6(파일·첨부) 진척에 맞춰 동작.
 - **강제 최소버전(CE5-S2)** — 서버가 클라 최소버전을 알려주는 엔드포인트가 있으면 연동.
+- **메일 연결** — 2026-08-11 통보. **서버 리포(`HohyeonKim592/heichitty-chat`) 작업**이며 이 저장소가 아니다. 클라이언트 영향 범위는 아직 미정 — 메일 링크로 앱을 여는 딥링크(`CE4-S4`)나 `allowNavigation` 확대가 얽힐 수 있으나 **통보 시점에 언급된 바 없으므로 추측해 착수하지 않는다.** 범위가 정해지면 여기에 갱신.

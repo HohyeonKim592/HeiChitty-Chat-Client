@@ -2,6 +2,18 @@
 
 > 진행 SSOT는 `spec/02-epic-story.md`(체크박스) + `git log`. 이 파일은 **다음에 손댈 것**을 위에서부터 모아둔 작업 큐다.
 
+## 🚧 게이트 후속 (2026-08-11 결정 반영)
+
+> 게이트 4건 결정: G-DIST ✅ 공개 스토어 · G-DOM ✅ 루프백(Mac mini) · G-SIGN 🔴 조사 필요 · G-IOS 🔴 설치 필요.
+> 게이트 표 정본은 `spec/02-epic-story.md` 「결정 게이트」.
+
+- [ ] **G-SIGN 서명 방법 조사** — 공개 스토어 기준 4플랫폼 서명 요건 정리: Android(Play 앱 서명 vs 자체 keystore) · iOS(Apple 인증서·프로비저닝) · Windows(코드서명 인증서 — 스토어 밖 배포 시 SmartScreen 경고 제거용) · macOS(Developer ID + notarization vs Mac App Store). 비용·절차·선행조건까지
+- [ ] **Xcode + CocoaPods 설치** 〔사용자 작업〕 — G-IOS 전제. 용량·라이선스 동의 때문에 대행 불가. 설치 후 `npm run add:ios`(CE0-S6)부터 진행
+- [ ] **데스크톱 배포 채널 결정** — 공개 스토어 결정은 모바일 한정이다. Windows/macOS는 GitHub Releases + `electron-updater`(CE5-S1) vs Mac App Store 중 미정
+- [ ] **스토어 계정 준비** — Google Play Console(등록비 1회) · Apple Developer Program(연간). `CE2-S2`·`CE2-S3` 선행조건
+- [ ] **App Store 심사 리스크 확인** — 원격 웹 뷰어라 Apple 심사지침 4.2(Minimum Functionality) 적용 가능성. 조항 존재는 사실이나 **이 앱에 어떻게 적용될지는 미조사**. 공개 App Store 목표라면 심사 전 확인 필요
+- [ ] **`CE3-S2` `allowNavigation` 좁히기** — G-DOM 확정으로 즉시 가능. `["*"]` → 루프백 `http://127.0.0.1:3000` 한정. `web/config.js`와 같은 값으로
+
 ## 🔼 남은 검증 후보 (최우선 — 2026-08-10 Desktop 실기검증 반영)
 
 > 셸 스모크는 9/9 통과(`npm test`). 아래는 수동·실기 미검증분.
