@@ -9,9 +9,7 @@
 #   scripts/collect-mobile.sh ios <ipa 경로>     # Xcode 로 export 한 ipa 를 지정해 수집
 #   KEEP=3 scripts/collect-mobile.sh android     # 아카이브 보관 개수 (기본 2)
 #
-# 아카이브·폐기 정책은 build-desktop.sh 와 동일:
-#   release/android/ · release/ios/       최신 1벌
-#   release/_archive/<platform>/<버전>-<시각>/   직전 KEEP벌
+# 보관·폐기 정책은 scripts/lib/release-store.sh 가 담당한다(build-desktop.sh 와 공유).
 #
 # iOS 는 ios/ 플랫폼이 아직 추가되지 않아(`npm run add:ios` 미실행) Xcode export 경로가
 # 확정되지 않았다. 그래서 경로를 추측하지 않고 인자로 받는다. 플랫폼 추가 후 경로가
@@ -28,41 +26,17 @@ case "$PLATFORM" in
     ;;
 esac
 
-KEEP="${KEEP:-2}"
-
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-OUT="$ROOT/release/$PLATFORM"
-ARCHIVE="$ROOT/release/_archive/$PLATFORM"
-
-VERSION="$(node -p "require('$ROOT/package.json').version")"
-STAMP="$(date +%Y%m%d-%H%M%S)"
-
-# 기존 산출물을 _archive/<platform>/<버전>-<시각>/ 로 옮기고, KEEP 개를 넘는 오래된 것을 지운다.
-archive_and_prune() {
-  local out="$1" archive="$2" dest old
-
-  if [ -d "$out" ] && [ -n "$(ls -A "$out" 2>/dev/null)" ]; then
-    dest="$archive/$VERSION-$STAMP"
-    mkdir -p "$dest"
-    ( shopt -s dotglob nullglob; mv "$out"/* "$dest"/ )
-    echo "  아카이브 → ${dest#"$ROOT"/}"
-  fi
-
-  [ -d "$archive" ] || return 0
-  while IFS= read -r old; do
-    [ -n "$old" ] || continue
-    rm -rf "${archive:?}/$old"
-    echo "  폐기 → ${archive#"$ROOT"/}/$old"
-  done < <(ls -1t "$archive" 2>/dev/null | tail -n +$((KEEP + 1)))
-}
+# shellcheck source=lib/release-store.sh
+source "$(dirname "${BASH_SOURCE[0]}")/lib/release-store.sh"
+release_store_init "$PLATFORM"
 
 # 수집할 원본 목록을 SOURCES 에 채운다.
 SOURCES=()
 
 if [ "$PLATFORM" = android ]; then
-  outputs="$ROOT/android/app/build/outputs"
+  outputs="$RELEASE_ROOT/android/app/build/outputs"
   if [ ! -d "$outputs" ]; then
-    echo "산출물이 없습니다: ${outputs#"$ROOT"/}" >&2
+    echo "산출물이 없습니다: $(release_store_rel "$outputs")" >&2
     echo "먼저 빌드하세요:  cd android && ./gradlew assembleDebug" >&2
     exit 1
   fi
@@ -88,16 +62,16 @@ if [ "${#SOURCES[@]}" -eq 0 ]; then
   exit 1
 fi
 
-echo "[1/2] 이전 산출물 정리 (KEEP=$KEEP)"
-archive_and_prune "$OUT" "$ARCHIVE"
+echo "[1/2] 이전 산출물 정리 (KEEP=$RELEASE_KEEP)"
+release_store_rotate
 
 echo "[2/2] 수집 — ${#SOURCES[@]}개"
-mkdir -p "$OUT"
+mkdir -p "$RELEASE_OUT"
 for f in "${SOURCES[@]}"; do
-  cp "$f" "$OUT/"
-  echo "  $(basename "$f")  ←  ${f#"$ROOT"/}"
+  cp "$f" "$RELEASE_OUT/"
+  echo "  $(basename "$f")  ←  $(release_store_rel "$f")"
 done
 
 echo
-echo "완료 — ${OUT#"$ROOT"/}"
-ls -lh "$OUT"
+echo "완료 — $(release_store_rel "$RELEASE_OUT")"
+ls -lh "$RELEASE_OUT"

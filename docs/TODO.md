@@ -20,10 +20,11 @@
 
 ## 🔧 정리 후보 (기술부채 — 급하지 않음)
 
-- [ ] **아카이브·prune 함수 중복** — `scripts/build-desktop.sh`와 `scripts/collect-mobile.sh`가 `archive_and_prune()`(각 ~20줄)을 같은 내용으로 갖고 있다. 각 스크립트를 자립형으로 두려고 의도한 중복이지만 드리프트 위험이 있다. `scripts/lib/release-store.sh`로 뽑아 `source`하는 안 — 사용자 판단 대기
+- (없음)
 
 ## 최근 완료 (2026-08-11)
 
+- **아카이브·폐기 로직 공통화** — `archive_and_prune()`가 두 스크립트에 중복돼 있던 것을 `scripts/lib/release-store.sh`로 분리(`release_store_init`/`release_store_rotate`/`release_store_rel`). 경로·버전·타임스탬프·`KEEP` 파생까지 lib이 맡아 중복이 더 줄었다. source 전용이라 실행권한 없음. 더미 apk로 1~3회차 + `KEEP=0` 회귀 검증
 - **산출물 관리 체계 정비** — 플랫폼별 분리 + 빌드 시마다 폐기분 자동 처리. 상세는 `spec/02-epic-story.md` `CE2-S0`
   - `release/{mac,win,android,ios}/` 최신 1벌 · `release/_archive/<os>/<버전>-<시각>/` 직전 `KEEP`벌(기본 2, 환경변수 조정)
   - `scripts/build-desktop.sh <mac|win>` — 정리 → sync → tsc → 패키징 → 중간산출물 삭제. electron-builder 호출 함정 2개를 구조적으로 차단

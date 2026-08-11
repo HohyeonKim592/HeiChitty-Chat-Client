@@ -139,7 +139,7 @@ release/
 
 데스크톱의 플랫폼 분리는 electron-builder 설정 한 줄이 담당합니다 — `directories.output: "../release/${os}"` (`${os}`는 `mac`/`win`/`linux`로 확장).
 
-**폐기 정책** — 두 스크립트 모두 빌드/수집 시작 시 기존 산출물을 `_archive/<플랫폼>/<버전>-<시각>/`으로 옮기고, 보관 개수를 넘는 오래된 것을 지웁니다. 기본 2벌이며 `KEEP`으로 조정합니다:
+**폐기 정책** — 두 스크립트 모두 빌드/수집 시작 시 기존 산출물을 `_archive/<플랫폼>/<버전>-<시각>/`으로 옮기고, 보관 개수를 넘는 오래된 것을 지웁니다. 이 로직은 `scripts/lib/release-store.sh`에 한 벌로 두고 두 스크립트가 `source`해 씁니다. 기본 2벌이며 `KEEP`으로 조정합니다:
 
 ```bash
 KEEP=3 ./scripts/build-desktop.sh mac     # 3벌 보관
@@ -178,7 +178,8 @@ heichitty-chat-client/
 ├─ capacitor.config.json
 ├─ scripts/             # 빌드·산출물 관리
 │  ├─ build-desktop.sh  # mac|win 배포 빌드 (정리→sync→tsc→패키징)
-│  └─ collect-mobile.sh # android|ios 산출물을 release/ 로 수집
+│  ├─ collect-mobile.sh # android|ios 산출물을 release/ 로 수집
+│  └─ lib/release-store.sh  # 아카이브·폐기 공통 로직 (source 전용, 위 둘이 공유)
 ├─ test/
 │  └─ ce1-shell.mjs     # CE1 셸 스모크 (zero-dep, npm test)
 ├─ docs/
