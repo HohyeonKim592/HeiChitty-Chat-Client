@@ -45,7 +45,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 - **진입 셸** `web/` — 바닐라 JS, 외부화(인라인 스크립트·스타일 금지), XSS-safe(`textContent`). `app.js`가 config 서버 주소로 **웹뷰 최상위를 이동**시킨다(`location.replace` — 셸을 히스토리에 안 남김). HeiChitty-Chat은 `X-Frame-Options`로 iframe 임베드를 막으므로 iframe이 아닌 top-level navigation을 쓴다.
 - **서버 주소 = 빌드 타임 config (config-only)** — `web/config.js`의 `window.HEICHITTY_SERVER` 단일값. 사용자에게 노출하지 않으며(런처·주소입력·자동접속 토글 없음), 앱은 그 주소로 **자동 접속**만 한다. 도달 불가/오프라인이면 상태화면에서 **재시도** 제공(online 복귀 시 자동 재시도). 운영/개발 전환은 `config.js` 한 줄 교체. `localStorage` 영속화·서버변경 기능은 없다(2026-06-22 결정).
-- **Capacitor 설정** `capacitor.config.json` — `appId`(`kr.co.heichitty.chat` — 2026-08-10 확정. 변경 시 `android/` 네이티브 패키지도 수기 동기화 필요), `webDir: web`, `server.allowNavigation`(원격 도메인 허용 — 현재 `["*"]`, 운영 서버 도메인 확정 시 **좁혀야 함**).
+- **Capacitor 설정** `capacitor.config.json` — `appId`(`kr.co.heichitty.chat` — 2026-08-10 확정. 변경 시 `android/` 네이티브 패키지도 수기 동기화 필요), `webDir: web`, `server.allowNavigation`(원격 도메인 허용 — 2026-08-12 `["*"]` → `["127.0.0.1"]`로 좁힘).
+  - ⚠️ **`allowNavigation`은 URL이 아니라 호스트 마스크다.** `Bridge.java`가 `HostMask.matches(url.getHost())`로 판정하고, 마스크는 `.`으로 쪼개 라벨 단위 비교(`*` 와일드카드 가능)한다. `http://127.0.0.1:3000` 같은 **전체 URL을 넣으면 영원히 매칭되지 않아 접속이 막힌다.** 스킴·포트는 표현할 수 없다 — 호스트 단위가 이 설정의 최소 입도다.
 - **데스크톱 네비게이션 seam** `electron/src/setup.ts` — 기본 템플릿은 커스텀 스킴 밖 이동을 막는다. 뷰어 동작을 위해 `isAllowedTarget`(자기 스킴 또는 http/https)로 완화함. 이 의도를 깨지 말 것.
 - **데스크톱 CSP seam** — 같은 파일 `setupContentSecurityPolicy()`. 템플릿은 "로컬 자산 전용 앱" 전제라 원격 응답의 CSP까지 덮어쓴다 → **셸(커스텀 스킴) 응답에만** 적용하도록 좁혀 뒀다. 그리고 `readShellServerOrigin()`이 `app/config.js`를 정규식으로 읽어 `connect-src`를 만든다 — 여기의 스킴 보정 규칙은 `web/app.js`의 `defaultSchemeFor()`/`normalize()`와 **반드시 같아야 한다.** 갈리면 도달성 preflight가 CSP에 조용히 막혀, 서버가 살아 있어도 늘 "서버에 연결할 수 없습니다"가 된다(2026-08-10 실제 발생). 둘 중 하나를 고치면 다른 하나도 고칠 것.
 - **셸 스모크·개발모드가 못 보는 층이 있다** — 목 `fetch`에는 CSP가 없어 스모크는 9/9 통과하고 `electron:start-live`도 정상인데 **패키징 빌드에서만** 터진 사고가 두 번 있었다(위 CSP 건 / `electron/src/index.ts`의 autoUpdater 404 → 모달로 기동 정지). 접속 경로·Electron 메인 프로세스를 건드렸으면 `./scripts/build-desktop.sh mac`으로 패키징본까지 확인한다. 패키징 앱은 CDP가 안 붙어 로그·TCP·화면으로 진단해야 한다.
@@ -55,7 +56,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 | 바꾸는 값 | 함께 손댈 곳 |
 |---|---|
-| 서버 주소 | `web/config.js`가 SSOT → `capacitor.config.json`의 `allowNavigation`을 **수기로** 같은 값으로. Electron `connect-src`는 config.js에서 자동 파생(위 CSP seam) |
+| 서버 주소 | `web/config.js`가 SSOT → `capacitor.config.json`의 `allowNavigation`을 **수기로** 그 주소의 **호스트만** 뽑아 반영(스킴·포트 제외). Electron `connect-src`는 config.js에서 자동 파생(위 CSP seam) |
 | `appId` | `android/app/build.gradle`(`namespace`·`applicationId`) · `android/app/src/main/java/`의 패키지 디렉터리 · `strings.xml`(`package_name`·`custom_url_scheme`) — **`cap sync`로 갱신되지 않는다** |
 
 ## 개발 명령 (dev-loop)
@@ -66,7 +67,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 |---|---|
 | 구문 검사 (lint) | `npm run lint` — `node --check web/app.js` |
 | 셸 스모크 테스트 | `npm test` (= `npm run smoke` = `npm run test:ce1` = `node test/ce1-shell.mjs`) |
-| 네이티브에 웹 자산 반영 | `npx cap sync` |
+| 네이티브에 웹 자산 반영 | `npx cap sync` — ⚠️ **electron은 포함되지 않는다.** 데스크톱까지 반영하려면 `npx cap sync @capacitor-community/electron`을 따로 (`run:electron`·`build-desktop.sh`는 이미 그렇게 부른다) |
 | 데스크톱 개발 실행(창 띄우기) | `npm run run:electron` — sync 후 `electron:start-live`(웹 자산 변경 자동 반영) |
 | 데스크톱 배포 빌드 | `./scripts/build-desktop.sh <mac\|win>` — 정리→sync→tsc→패키징 일괄. `KEEP=<n>`으로 아카이브 개수 조정 |
 | 모바일 산출물 수집 | `./scripts/collect-mobile.sh <android\|ios>` |

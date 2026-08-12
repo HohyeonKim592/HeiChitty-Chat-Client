@@ -4,6 +4,6 @@
   "webDir": "web",
   "server": {
     "androidScheme": "https",
-    "allowNavigation": ["*"]
+    "allowNavigation": ["127.0.0.1"]
   }
 }

@@ -8,7 +8,8 @@
 > 함께 결정: **소스 리포 public 전환**(private면 `electron-updater`가 사용자 머신마다 `GH_TOKEN`을 요구).
 > 상세 근거·조사 결과는 `spec/02-epic-story.md`의 `CE2-S4`·`CE5-S1`.
 
-- [~] **업무 이메일 제거** — `electron/package.json` 교체 + 커밋 이력 14건 재작성 + 로컬 `user.email` 설정 **완료**. 남은 것: **`git push --force-with-lease origin main Hohyeon.Kim`**(권한 정책에 막혀 미실행). 원본은 `backup/pre-mail-main`·`backup/pre-mail-hohyeon`에 보존 — push 반영 확인 후 삭제할 것
+- [x] **업무 이메일 제거** — `electron/package.json` 교체 + 커밋 이력 14건 재작성 + 로컬 `user.email` 설정 + **force push 반영 완료**(2026-08-12). GitHub API로 원격 커밋 author 교체 확인, `origin/main`·`origin/Hohyeon.Kim` 잔존 0건
+  - 로컬에 `backup/pre-mail-main`·`backup/pre-mail-hohyeon`(구 이력, 업무 이메일 포함)이 남아 있다. **원격에 push하지 말 것** — 불필요해지면 삭제
 - [ ] **리포 public 전환** — `gh repo edit --visibility public`. **되돌릴 수 없다**(복제·인덱싱). 선행: 위 force push 완료 · 아래 `allowNavigation` 좁히기 권장
   - 전환 전 민감정보 스캔 완료(2026-08-12): 자격증명 **0건** · 이력에서 삭제된 파일 **0건** · 사설 IP **0건**. 노출되는 건 `docs/`의 내부 로드맵뿐
   - **폴더 단위 공개/비공개는 불가능**(GitHub visibility는 리포 전체 단위 — git이 트리 전체를 해시로 묶기 때문). `docs/`를 가리려면 별도 private 리포 분리 또는 private submodule뿐이고, 둘 다 동기화·관리 비용이 더 크다 → **그대로 공개** 방향
@@ -17,7 +18,7 @@
 - [ ] **Xcode + CocoaPods 설치** 〔사용자 작업〕 — G-IOS 전제. 용량·라이선스 동의 때문에 대행 불가. 설치 후 `npm run add:ios`(CE0-S6)부터 진행
 - [ ] **스토어 계정 준비** — Google Play Console(등록비 1회) · Apple Developer Program(연간). `CE2-S2`·`CE2-S3` 선행조건
 - [ ] **App Store 심사 리스크 확인** — 원격 웹 뷰어라 Apple 심사지침 4.2(Minimum Functionality) 적용 가능성. 조항 존재는 사실이나 **이 앱에 어떻게 적용될지는 미조사**. 공개 App Store 목표라면 심사 전 확인 필요
-- [ ] **`CE3-S2` `allowNavigation` 좁히기** — G-DOM 확정으로 즉시 가능. `["*"]` → 루프백 `http://127.0.0.1:3000` 한정. `web/config.js`와 같은 값으로
+- [x] **`CE3-S2` `allowNavigation` 좁히기** — 2026-08-12 완료. `["*"]` → **`["127.0.0.1"]`**. 종전 지침("`web/config.js`와 같은 값")은 **틀린 것으로 확인**돼 정정 — 이 설정은 URL이 아니라 호스트 마스크다(상세는 `spec/02-epic-story.md` `CE3-S2`)
 
 ## 🔼 남은 검증 후보 (최우선 — 2026-08-10 Desktop 실기검증 반영)
 
@@ -41,6 +42,9 @@
 
 ## 최근 완료 (2026-08-12)
 
+- **`CE3-S2` `allowNavigation` 좁히기 — `["*"]` → `["127.0.0.1"]`** (G-DOM 통과). 착수하며 **기존 지침이 틀렸음을 소스로 확인**: 이 설정은 URL이 아니라 **호스트 마스크**다(`Bridge.java:395`가 `HostMask.matches(url.getHost())`, `HostMask.java:114`가 `.` 단위 분리). 문서대로 `http://127.0.0.1:3000`을 넣었다면 **매칭 실패로 접속이 막혔을 것**
+  - 파생 정정: **B-1′ 폐기** — 호스트만으로는 스킴·포트를 복원할 수 없어 `connect-src` 파생원이 될 수 없다
+  - 한계 기록: 이 설정으로는 **포트를 좁힐 수 없다**(호스트가 최소 입도)
 - **데스크톱 배포 채널 확정 — GitHub Releases + `electron-updater`** (G-DIST 완전 통과). Mac App Store는 샌드박스 구조 변경 + 심사 4.2 부담 대비 이점이 없어 미채택. 현재 코드가 이미 안 A 전제(`publish: github` + `electron-updater` 의존성)
   - **GitHub 사용한도 조사** — 자산당 2 GiB·릴리스당 1000개 제한은 있으나 **총 크기·대역폭 무제한**(공식 문서 명시). AUP §9 "현저히 과다 시 스로틀"만 남는데 실측 릴리스 1회 239MB 규모로는 무관
   - **자동업데이트가 지금 코드로는 동작하지 않음을 발견** — ① 리포 private(사용자 머신마다 `GH_TOKEN` 필요, 2026-08-10 404 사고의 원인) ② mac 타깃 `dmg` 단독(Squirrel.Mac은 `zip` 필수) ③ macOS 서명 필수. 셋 다 `CE5-S1` 선행조건으로 등록
@@ -94,5 +98,5 @@
 
 - 수동·실기 재검증 (위 검증 후보 — 시나리오 A 재검증·오프라인 동선 우선)
 - Wave 0 남은 결정: **G-SIGN(서명 방법)·G-IOS(Xcode 설치)** 둘뿐 — G-DOM·G-DIST는 통과
-- **G-DOM 확정 시 `connect-src` 파생원 격상 검토(B-1′)** — 지금은 `app/config.js` 정규식 파싱이라 `web/app.js`와 스킴 보정 규칙이 갈릴 위험이 있다. `capacitor.config.json`의 `allowNavigation`(현재 `["*"]`)이 운영 도메인으로 좁혀지면 그쪽에서 파생하도록 바꿔 파싱·규칙 중복을 없앨 수 있다(`index.ts`가 이미 `capacitorFileConfig`를 보유)
+- ~~**`connect-src` 파생원 격상 검토(B-1′)**~~ — **폐기(2026-08-12)**. `allowNavigation`은 호스트만 담아 스킴·포트를 복원할 수 없으므로 `connect-src`의 파생원이 될 수 없다. `web/config.js` 파싱(B-1) 유지 — 즉 `setup.ts`와 `app.js`의 **스킴 보정 규칙 동기화 의무는 계속 남는다**
 - CE6-S4: pre-push 훅(lint+smoke 자동화) — 원격이 생겨 착수 가능

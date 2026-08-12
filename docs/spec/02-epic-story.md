@@ -87,9 +87,13 @@
 
 ### CE3 — 구성·브랜딩
 - [x] `CE3-S1` **appId 확정** — `kr.co.heichitty.chat` (2026-08-10 확정, android 네이티브 패키지까지 반영) 〔G-ID〕
-- [ ] `CE3-S2` **`allowNavigation` 좁히기** — 현재 `["*"]` → 접속 대상 한정 〔G-DOM〕. *즉시 진행 가능 — `web/config.js`와 동일 값으로 좁힐 것*
+- [x] `CE3-S2` **`allowNavigation` 좁히기** — 2026-08-12 `["*"]` → **`["127.0.0.1"]`** 〔G-DOM〕
+  - ⚠️ **URL이 아니라 호스트 마스크다** (착수 전 문서에 적혀 있던 "`web/config.js`와 동일 값" 지침은 **틀렸다**). `Bridge.java:395`가 `appAllowNavigationMask.matches(url.getHost())`로 **호스트만** 넘기고, `util/HostMask.java:114`의 `splitAndReverse`가 마스크를 `.`으로 쪼개 라벨 단위로 비교한다. `http://127.0.0.1:3000`을 넣으면 `["http://127","0","0","1:3000"]`로 파싱돼 호스트 `127.0.0.1`과 **영원히 매칭되지 않는다** → 접속 차단
+  - `["*"]`가 전부 허용이던 이유도 같은 코드에서 확인됨 — 마스크 라벨이 `*` 하나면 `Util.matches`가 무조건 true(`HostMask.java:105`)
+  - **스킴·포트는 이 설정으로 좁힐 수 없다.** 호스트가 최소 입도라 `127.0.0.1`의 모든 포트가 열린다. 포트까지 좁히려면 다른 층(Electron `isAllowedTarget`·CSP)에서 해야 한다
+  - 적용 대상은 **Android(및 iOS 추가 시)**. 데스크톱 네비게이션은 `electron/src/setup.ts`의 `isAllowedTarget`이 따로 판정하므로 이 값의 영향을 받지 않는다
   - **2026-08-11 G-DOM 방향 확정**: 테스트 단계는 같은 Mac mini에서 서버·클라를 함께 돌리므로 대상이 **루프백 `http://127.0.0.1:3000`** 하나다. 즉 `["*"]` → 루프백 한정으로 지금 좁힐 수 있다. 운영서버는 추후 도입 시 같은 자리 한 줄 교체
-  - 함께 볼 것: Electron 셸 CSP의 `connect-src`도 같은 오리진을 가리켜야 한다. 지금은 `app/config.js` 정규식 파싱으로 파생하는데, `allowNavigation`이 좁혀지면 **거기서 파생하도록 격상(B-1′)**해 파싱·스킴보정 중복을 없앨 수 있다
+  - ❌ **B-1′(연 `connect-src`를 `allowNavigation`에서 파생) 안은 폐기.** `connect-src`는 **스킴+호스트+포트**가 있는 완전한 오리진을 요구하는데 `allowNavigation`은 호스트만 담는다. 이 값에서는 `http`인지 `https`인지, 포트가 무엇인지 복원할 수 없다 → `web/config.js` 파싱(B-1)을 유지한다
 - [ ] `CE3-S3` 앱 아이콘·스플래시 (`@capacitor/assets` 등으로 4플랫폼 생성)
 - [~] `CE3-S4` 표시명·버전·환경(개발/운영) 프로파일 — **데스크톱분 완료(2026-08-10)**: `productName: HeiChitty-Chat`(2026-08-12 `HeiChitty Chat` → 하이픈 표기 통일) · `appId: kr.co.heichitty.chat` · 버전 SSOT **`0.0.1`**(발매 준비 완료 시 1.0.0 승격) · `mac.category: public.app-category.social-networking`. 남은 것: 모바일 표시명, 빌드별 서버 기본값(선택)
   - ⚠️ `capacitor.config.json`의 `appName`은 **electron-builder가 참조하지 않는다**. 데스크톱 표시명은 `electron-builder.config.json`의 `productName`이 따로 정한다 — 둘을 같이 고칠 것
@@ -123,7 +127,7 @@
 | 게이트 | 시점/Story | 통과 기준 | 비고 |
 |---|---|---|---|
 | **G-ID** appId 확정 | CE3-S1 (배포 전) | 정식 번들 ID 확정 | ✅ 통과 — `kr.co.heichitty.chat`(2026-08-10). Android 패키지명·iOS Bundle ID 공용 |
-| **G-DOM** 허용 도메인 | CE3-S2 | `allowNavigation`을 접속 대상으로 한정 | ✅ 방향 확정(2026-08-11) — 테스트는 **같은 Mac mini 루프백 `http://127.0.0.1:3000`**. 운영 도메인은 추후. 좁히기 착수 가능(현재 `["*"]` 광역) |
+| **G-DOM** 허용 도메인 | CE3-S2 | `allowNavigation`을 접속 대상으로 한정 | ✅ **통과** — 방향 확정(2026-08-11, 같은 Mac mini 루프백) + **좁히기 완료**(2026-08-12, `["*"]` → `["127.0.0.1"]`). 운영 도메인은 추후 도입 시 호스트만 교체 |
 | **G-IOS** iOS 빌드환경 | CE0-S6/CE2-S3 | Mac+Xcode+CocoaPods 확보, `cap add ios` 성공 | 🔴 미통과 — **Xcode·CocoaPods 설치 필요**(2026-08-11 확인). Xcode는 용량·라이선스 동의 때문에 **사용자가 직접 설치**해야 한다. 설치 후 `npm run add:ios`부터 진행 |
 | **G-SIGN** 코드 서명 | CE2-S2/S3 | Android keystore · Apple 인증서 · 데스크톱 서명 | 🔴 미정 — **서명 방법 조사 필요**(2026-08-11). 공개 스토어 확정으로 요구사항은 정해졌다: Play 앱 서명/keystore · Apple 인증서+프로비저닝 · (스토어 밖 데스크톱 배포 시) Windows 코드서명. 현재 dmg/exe는 미서명 |
 | **G-DIST** 배포 채널 | CE2-S4 | 사내배포 / 공개 스토어 택일 | ✅ **완전 통과** — 모바일 = 공개 스토어(2026-08-11, Google Play · Apple App Store) · 데스크톱 = **GitHub Releases + `electron-updater`**(2026-08-12). 후속: 리포 public 전환·mac `zip` 타깃 추가는 `CE5-S1` |

@@ -15,7 +15,7 @@ Capacitor 웹뷰 래퍼 한 벌로 **Windows · macOS · Android · iOS**를 모
 2. 도달 가능하면 웹뷰가 그 주소(HeiChitty-Chat 웹)로 이동합니다 — `location.replace`라 셸은 히스토리에 남지 않습니다(뒤로가기로 셸에 돌아오지 않음).
 3. 도달 불가/오프라인이면 **상태 화면**에 머물며 "다시 시도" 버튼을 제공합니다. 네트워크가 온라인으로 복귀하면 자동 재시도합니다.
 
-서버 주소(`web/config.js`)는 현재 `http://127.0.0.1:3000`입니다. **테스트 단계에서는 Mac mini 한 대에서 서버와 클라이언트를 함께 돌리므로 이 루프백 주소가 실제 접속 주소입니다**(2026-08-11 확정). 운영서버는 추후 도입 가능성이 있으며, 그때는 이 `config.js` 한 줄과 `capacitor.config.json`의 `allowNavigation`을 같은 값으로 교체해 재빌드합니다(G-DOM).
+서버 주소(`web/config.js`)는 현재 `http://127.0.0.1:3000`입니다. **테스트 단계에서는 Mac mini 한 대에서 서버와 클라이언트를 함께 돌리므로 이 루프백 주소가 실제 접속 주소입니다**(2026-08-11 확정). 운영서버는 추후 도입 가능성이 있으며, 그때는 이 `config.js` 한 줄과 `capacitor.config.json`의 `allowNavigation`(**호스트만**)을 함께 교체해 재빌드합니다(G-DOM).
 `localhost`·`127.x` 등 루프백은 스킴 생략 시 `http://`로 정규화됩니다(그 외는 `https://`).
 
 ---
@@ -156,13 +156,15 @@ KEEP=0 ./scripts/build-desktop.sh mac     # 보관 없이 매번 폐기
 
 `web/config.js`:
 
-- **`window.HEICHITTY_SERVER`** — 접속할 서버 주소. 현재 `http://127.0.0.1:3000`은 **테스트 단계의 실제 주소**입니다(Mac mini에서 서버·클라이언트 동시 실행, 2026-08-11 확정). 운영서버 도입 시 그 주소로 교체하고 아래 `allowNavigation`도 같은 값으로 맞추세요.
+- **`window.HEICHITTY_SERVER`** — 접속할 서버 주소. 현재 `http://127.0.0.1:3000`은 **테스트 단계의 실제 주소**입니다(Mac mini에서 서버·클라이언트 동시 실행, 2026-08-11 확정). 운영서버 도입 시 그 주소로 교체하고, 아래 `allowNavigation`에는 **그 주소의 호스트만** 맞춰 넣으세요.
 
 `capacitor.config.json`:
 
 - **`appId`** — `kr.co.heichitty.chat` (2026-08-10 확정). Android 패키지명·iOS Bundle ID로 사용됩니다. 이후 변경할 땐 `android/app/build.gradle`의 `namespace`·`applicationId`, `android/app/src/main/java/` 패키지 디렉토리, `strings.xml`의 `package_name`·`custom_url_scheme`도 함께 고쳐야 합니다 — `cap sync`로는 갱신되지 않습니다.
 - **`appName`** — 표시 이름. 현재 `HeiChitty-Chat`.
-- **`server.allowNavigation`** — 현재 `["*"]`(모든 도메인 허용). G-DOM이 확정됐으므로 **루프백 `http://127.0.0.1:3000` 한정으로 좁힐 수 있습니다**(`CE3-S2` 미착수). `config.js` 주소와 항상 같은 값으로 유지하세요.
+- **`server.allowNavigation`** — 현재 `["127.0.0.1"]` (2026-08-12 `["*"]`에서 좁힘, `CE3-S2` 완료).
+  - ⚠️ **URL이 아니라 호스트 마스크입니다.** Capacitor는 `HostMask.matches(url.getHost())`로 판정하므로 `http://127.0.0.1:3000` 같은 전체 URL을 넣으면 **매칭되지 않아 접속이 막힙니다**. `config.js` 주소에서 **호스트만** 뽑아 적으세요(스킴·포트는 표현 불가 — 해당 호스트의 모든 포트가 열립니다).
+  - 마스크는 `.`으로 쪼개 라벨 단위로 비교하며 `*` 와일드카드를 씁니다(예: `*.example.com`). 마스크가 `*` 하나면 전부 허용입니다.
 
 ---
 
