@@ -1,4 +1,4 @@
-# 할 일 (heichitty-chat-client)
+# 할 일 (HeiChitty-Chat-Client)
 
 > 진행 SSOT는 `spec/02-epic-story.md`(체크박스) + `git log`. 이 파일은 **다음에 손댈 것**을 위에서부터 모아둔 작업 큐다.
 

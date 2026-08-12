@@ -2,7 +2,7 @@
   "name": "heichitty-chat-client",
   "version": "0.0.1",
   "private": true,
-  "description": "HeiChitty Chat 데스크톱·모바일 뷰어 (Capacitor 웹뷰 래퍼)",
+  "description": "HeiChitty-Chat 데스크톱·모바일 뷰어 (Capacitor 웹뷰 래퍼)",
   "type": "module",
   "scripts": {
     "lint": "node --check web/app.js",

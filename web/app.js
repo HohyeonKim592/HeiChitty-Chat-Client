@@ -1,6 +1,6 @@
 "use strict";
 
-// HeiChitty Chat 뷰어 셸 (config-only).
+// HeiChitty-Chat 뷰어 셸 (config-only).
 //
 // 이 앱은 상태를 갖지 않는 얇은 뷰어다. 빌드 타임 config(config.js)의 서버 주소로
 // 자동 접속하고, 사용자에게 주소를 묻지 않는다.

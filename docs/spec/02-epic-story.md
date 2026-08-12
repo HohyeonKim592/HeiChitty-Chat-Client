@@ -1,7 +1,7 @@
-# 02 — EPIC & STORY 로드맵 (heichitty-chat-client)
+# 02 — EPIC & STORY 로드맵 (HeiChitty-Chat-Client)
 
-> 이 문서는 **heichitty-chat-client**(웹 기반 HeiChitty Chat을 띄우는 데스크톱·모바일 뷰어)의 단계화 로드맵이다.
-> 채팅·인증·실시간 로직은 원격 **HeiChitty Chat 서버**가 담당하고, 이 앱은 그 웹을 띄우는 **얇은 뷰어**다 — 상태를 거의 갖지 않는다.
+> 이 문서는 **HeiChitty-Chat-Client**(웹 기반 HeiChitty-Chat을 띄우는 데스크톱·모바일 뷰어)의 단계화 로드맵이다.
+> 채팅·인증·실시간 로직은 원격 **HeiChitty-Chat 서버**가 담당하고, 이 앱은 그 웹을 띄우는 **얇은 뷰어**다 — 상태를 거의 갖지 않는다.
 > 연계: `../../CLAUDE.md`(작업원칙·아키텍처) · `../../README.md`(4플랫폼 빌드·실행) · `capacitor.config.json`(설정) · `electron/src/setup.ts`(데스크톱 네비게이션).
 > 개발방식 = **walking skeleton**(뼈대 → 살). 뷰어는 얇으므로 EPIC을 적게 둔다.
 > **진행현황 단일소스 = `git log`(`CE#-S#`) + 본 문서 체크박스.**
@@ -16,7 +16,7 @@
 | 테스트서버 위치 | **Mac mini에서 서버·클라이언트를 같이 실행** → `http://127.0.0.1:3000` 루프백 그대로 사용. LAN·mDNS 주소 불필요 | ✅ 확정 (2026-08-11) |
 | 운영서버 | **추후 도입 가능성 있음** — 도메인 미정. 도입 시 `web/config.js` 한 줄 + `allowNavigation` 교체 후 재빌드(config-only 설계의 이점) | 🟡 보류 |
 | 부가기능 v1 | **푸시 알림(CE4)·자동 업데이트(CE5) 포함** | ✅ 확정 |
-| git 저장소·브랜치 | private GitHub `HohyeonKim592/heichitty-chat-client` · `Hohyeon.Kim`(작업) → `main`(기본) 병합 — 형제 chitty 리포 관례 승계 | ✅ 확정 (2026-08-10) |
+| git 저장소·브랜치 | private GitHub `HohyeonKim592/HeiChitty-Chat-Client` · `Hohyeon.Kim`(작업) → `main`(기본) 병합 — 형제 chitty 리포 관례 승계 | ✅ 확정 (2026-08-10) |
 | 모바일 배포 채널 | **공개 스토어** (Google Play · Apple App Store) | ✅ 확정 (2026-08-11) |
 | 데스크톱 배포 채널 | 공개 스토어 결정은 모바일 한정. Windows/macOS는 **별개로 미정** — GitHub Releases + `electron-updater`(CE5-S1) vs Mac App Store | 🔴 미정 |
 
@@ -51,7 +51,7 @@
 > 설계 핵심(코드 = `web/app.js`·`web/config.js`·`electron/src/setup.ts`): config 주소로 **자동 접속** + 이동 전 **사전 도달성 점검** + 실패 시 상태화면 **재시도**.
 > **플랫폼 설정 의존**(CE3): http 서버(개발 localhost 등) 접속 시 Android `usesCleartextTraffic`·iOS ATS 예외 필요(https 운영서버면 무관).
 - [~] `CE1-S1` ~~서버주소 입력·저장 + 자동접속 토글~~ → **폐기(config-only)**. 대체: `CE1-S1'` 빌드 타임 config 주입(`web/config.js`) + config 주소 자동접속
-- [x] `CE1-S2` 최상위 네비게이션 진입 — HeiChitty Chat이 `X-Frame-Options`로 iframe을 막으므로 top-level `location` 이동(`location.replace`)
+- [x] `CE1-S2` 최상위 네비게이션 진입 — HeiChitty-Chat이 `X-Frame-Options`로 iframe을 막으므로 top-level `location` 이동(`location.replace`)
 - [x] `CE1-S3` **연결 실패 처리** — 이동 전 `preflight`(no-cors fetch + 5s 타임아웃)로 도달성 점검 + `navigator.onLine` 가드 → 실패 시 상태화면에 머물며 **재시도** 제공. online 복귀 시 자동 재시도. **2026-08-10 Desktop 실기검증에서 CSP 차단 버그 발견·수정**(아래 §데스크톱 CSP 주의) 후 **서버 실제 정지·재기동으로 실패→재시도→접속 전 구간 확인**
 - [~] `CE1-S4` ~~서버 변경 재진입~~ → **폐기(config-only, 서버변경 미노출)**. Desktop "서버 변경" 메뉴·바운스 방지 로직 함께 제거
 - [x] `CE1-S5` **로딩·오프라인 표시** — 스플래시 상태(`접속 확인 중…`/`접속 중…`) + online/offline 배너 + 도달 실패 시 상태화면. **2026-08-10 Electron 실기 검증 완료**(오프라인 메시지·배너·online 복귀 자동 재시도)
@@ -88,13 +88,13 @@
   - **2026-08-11 G-DOM 방향 확정**: 테스트 단계는 같은 Mac mini에서 서버·클라를 함께 돌리므로 대상이 **루프백 `http://127.0.0.1:3000`** 하나다. 즉 `["*"]` → 루프백 한정으로 지금 좁힐 수 있다. 운영서버는 추후 도입 시 같은 자리 한 줄 교체
   - 함께 볼 것: Electron 셸 CSP의 `connect-src`도 같은 오리진을 가리켜야 한다. 지금은 `app/config.js` 정규식 파싱으로 파생하는데, `allowNavigation`이 좁혀지면 **거기서 파생하도록 격상(B-1′)**해 파싱·스킴보정 중복을 없앨 수 있다
 - [ ] `CE3-S3` 앱 아이콘·스플래시 (`@capacitor/assets` 등으로 4플랫폼 생성)
-- [~] `CE3-S4` 표시명·버전·환경(개발/운영) 프로파일 — **데스크톱분 완료(2026-08-10)**: `productName: HeiChitty Chat` · `appId: kr.co.heichitty.chat` · 버전 SSOT **`0.0.1`**(발매 준비 완료 시 1.0.0 승격) · `mac.category: public.app-category.social-networking`. 남은 것: 모바일 표시명, 빌드별 서버 기본값(선택)
+- [~] `CE3-S4` 표시명·버전·환경(개발/운영) 프로파일 — **데스크톱분 완료(2026-08-10)**: `productName: HeiChitty-Chat`(2026-08-12 `HeiChitty Chat` → 하이픈 표기 통일) · `appId: kr.co.heichitty.chat` · 버전 SSOT **`0.0.1`**(발매 준비 완료 시 1.0.0 승격) · `mac.category: public.app-category.social-networking`. 남은 것: 모바일 표시명, 빌드별 서버 기본값(선택)
   - ⚠️ `capacitor.config.json`의 `appName`은 **electron-builder가 참조하지 않는다**. 데스크톱 표시명은 `electron-builder.config.json`의 `productName`이 따로 정한다 — 둘을 같이 고칠 것
 
 ### CE4 — 네이티브 통합 + 푸시 *(v1)*
 - [ ] `CE4-S1` Android 하드웨어 뒤로가기 — 원격 페이지 히스토리/앱 종료 정책
 - [ ] `CE4-S2` 외부 링크 → 시스템 브라우저 (`setWindowOpenHandler`/모바일 동등 처리)
-- [ ] `CE4-S3` 파일 다운로드/업로드 브리지 — 첨부 송수신(HeiChitty Chat E6 대응)
+- [ ] `CE4-S3` 파일 다운로드/업로드 브리지 — 첨부 송수신(HeiChitty-Chat E6 대응)
 - [ ] `CE4-S4` 딥링크/유니버설 링크 — 특정 방·메시지로 진입
 - [ ] `CE4-S5` **푸시 알림** — FCM(Android)·APNs(iOS) 토큰 등록·수신·탭 이동 〔**서버측 발송 연동 의존**〕
 
@@ -108,7 +108,7 @@
 - [x] `CE6-S2` **셸 로직 스모크** — `test/ce1-shell.mjs`(zero-dep, DOM 목으로 실제 `app.js` 구동): config 정규화·자동접속(`location.replace`)·오프라인·preflight 실패·재시도·online 자동재시도 = **9/9 PASS** (`npm test` = `npm run smoke`)
   - **한계** — 목 `fetch`에는 CSP가 없다. 2026-08-10의 CSP 차단 버그 2건은 9/9 통과 상태에서도 실기가 완전히 죽어 있던 사례다. **플랫폼 정책(CSP·cleartext·ATS)이 얽힌 건 스모크로 못 잡으니 실기 검증이 필수**
 - [ ] `CE6-S3` 4플랫폼 빌드 검증 — android assemble · electron build · (가능 시 iOS)
-- [ ] `CE6-S4` pre-push 훅 — lint+스모크 (HeiChitty Chat E0-S3 관례 승계). *CE0-S2로 원격이 생겨 착수 가능*
+- [ ] `CE6-S4` pre-push 훅 — lint+스모크 (HeiChitty-Chat E0-S3 관례 승계). *CE0-S2로 원격이 생겨 착수 가능*
 
 ## 결정 게이트
 
@@ -164,7 +164,7 @@
 
 ## 외부 의존 (서버측)
 
-- **푸시(CE4-S5)** — 서버가 이벤트 발생 시 FCM/APNs로 발송해야 함(HeiChitty Chat 측 작업). 클라는 토큰 등록·수신·라우팅 담당.
-- **첨부(CE4-S3)** — HeiChitty Chat E6(파일·첨부) 진척에 맞춰 동작.
+- **푸시(CE4-S5)** — 서버가 이벤트 발생 시 FCM/APNs로 발송해야 함(HeiChitty-Chat 측 작업). 클라는 토큰 등록·수신·라우팅 담당.
+- **첨부(CE4-S3)** — HeiChitty-Chat E6(파일·첨부) 진척에 맞춰 동작.
 - **강제 최소버전(CE5-S2)** — 서버가 클라 최소버전을 알려주는 엔드포인트가 있으면 연동.
 - **메일 연결** — 2026-08-11 통보. **서버 리포(`HohyeonKim592/heichitty-chat`) 작업**이며 이 저장소가 아니다. 클라이언트 영향 범위는 아직 미정 — 메일 링크로 앱을 여는 딥링크(`CE4-S4`)나 `allowNavigation` 확대가 얽힐 수 있으나 **통보 시점에 언급된 바 없으므로 추측해 착수하지 않는다.** 범위가 정해지면 여기에 갱신.

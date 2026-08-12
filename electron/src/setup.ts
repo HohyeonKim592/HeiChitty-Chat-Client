@@ -185,7 +185,7 @@ export class ElectronCapacitorApp {
       this.loadMainWindow(this);
     }
 
-    // Security — 이 앱은 원격 HeiChitty Chat 웹을 띄우는 뷰어다.
+    // Security — 이 앱은 원격 HeiChitty-Chat 웹을 띄우는 뷰어다.
     // 자기 스킴(로컬 셸) 또는 http/https(원격 서버)로의 이동만 허용한다.
     const isAllowedTarget = (url: string) =>
       url.includes(this.customScheme) ||
@@ -224,7 +224,7 @@ export class ElectronCapacitorApp {
 
 // Set a CSP up for our application based on the custom scheme
 //
-// 이 앱은 원격 HeiChitty Chat 웹을 띄우는 뷰어다 — 로컬 자산만 쓰는 기본 템플릿과 전제가 다르다.
+// 이 앱은 원격 HeiChitty-Chat 웹을 띄우는 뷰어다 — 로컬 자산만 쓰는 기본 템플릿과 전제가 다르다.
 // onHeadersReceived 는 세션 전역이라, 템플릿 그대로 두면 원격 서버 응답의 CSP 까지
 // 커스텀 스킴 전용 정책으로 '대체'해 버린다. 그 결과 서버 자신의 CSS·JS·socket.io 가
 // 전부 차단되어 화면이 무스타일로 깨지고 실시간 채팅이 동작하지 않는다(2026-08-10 실기 확인).

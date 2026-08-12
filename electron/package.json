@@ -1,14 +1,14 @@
 {
   "name": "heichitty-chat-client",
   "version": "0.0.1",
-  "description": "HeiChitty Chat 데스크톱 뷰어 (Capacitor Electron 래퍼)",
+  "description": "HeiChitty-Chat 데스크톱 뷰어 (Capacitor Electron 래퍼)",
   "author": {
     "name": "Hohyeon.Kim",
     "email": "hohyeon.kim@winway.co.kr"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/HohyeonKim592/heichitty-chat-client.git"
+    "url": "https://github.com/HohyeonKim592/HeiChitty-Chat-Client.git"
   },
   "license": "MIT",
   "main": "build/src/index.js",

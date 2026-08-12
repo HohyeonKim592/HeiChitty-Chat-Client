@@ -1,8 +1,8 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <!-- appName·appId 확정(HeiChitty Chat / kr.co.heichitty.chat) 반영. cap add 시점 생성값을 수기 갱신. -->
-    <string name="app_name">HeiChitty Chat</string>
-    <string name="title_activity_main">HeiChitty Chat</string>
+    <!-- appName·appId 확정(HeiChitty-Chat / kr.co.heichitty.chat) 반영. cap add 시점 생성값을 수기 갱신. -->
+    <string name="app_name">HeiChitty-Chat</string>
+    <string name="title_activity_main">HeiChitty-Chat</string>
     <string name="package_name">kr.co.heichitty.chat</string>
     <string name="custom_url_scheme">kr.co.heichitty.chat</string>
 </resources>

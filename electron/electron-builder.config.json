@@ -1,6 +1,6 @@
 {
   "appId": "kr.co.heichitty.chat",
-  "productName": "HeiChitty Chat",
+  "productName": "HeiChitty-Chat",
   "directories": {
     "buildResources": "resources",
     "output": "../release/${os}"

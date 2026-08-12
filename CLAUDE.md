@@ -2,12 +2,12 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-# 작업원칙 (heichitty-chat-client)
+# 작업원칙 (HeiChitty-Chat-Client)
 
 이 파일은 본 작업경로에서 일하는 Claude Code 인스턴스의 작업방식 규칙입니다.
-**HeiChitty Chat(웹 서버)와는 별개의 독립 경로**이며, 작업방식 원칙만 승계하고 서버의 구조·코드는 가져오지 않습니다.
+**HeiChitty-Chat(웹 서버)와는 별개의 독립 경로**이며, 작업방식 원칙만 승계하고 서버의 구조·코드는 가져오지 않습니다.
 
-이 클라이언트는 웹 기반 HeiChitty Chat을 **데스크톱·모바일에서 띄우는 뷰어**(Capacitor 웹뷰 래퍼)입니다.
+이 클라이언트는 웹 기반 HeiChitty-Chat을 **데스크톱·모바일에서 띄우는 뷰어**(Capacitor 웹뷰 래퍼)입니다.
 
 > **이 파일은 매 세션 자동 로드 → lean 유지.** *작업방식 규칙*만 둔다. 프로젝트 구조·빌드·결정 등 특정 컨텍스트는 `README.md`/`docs/`에 두고 여기선 가리키기만 한다(끝 §컨텍스트 맵).
 
@@ -33,16 +33,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## 4. Git — 이 경로의 추가 조항
 > 일반 Git 규칙(상태변경은 명시 지시 시에만 · `git add` 명시 경로 · main 직접 작업 금지 · destructive 재확인 · **AI 저작 흔적 금지**)은 **공통 원칙 §3**이 정본이다.
 
-- **브랜치 모델** — 원격은 private `HohyeonKim592/heichitty-chat-client`(default `main`). 작업은 **`Hohyeon.Kim` 브랜치**에서 하고 완료분만 `main`에 병합한다(형제 chitty 리포 관례).
+- **브랜치 모델** — 원격은 private `HohyeonKim592/HeiChitty-Chat-Client`(default `main`). 작업은 **`Hohyeon.Kim` 브랜치**에서 하고 완료분만 `main`에 병합한다(형제 chitty 리포 관례).
 
 ## 7. 진행 가시화 (Task 목록) → 공통 원칙 §8
 > 이 경로에서 쓰던 조항이 2026-08-10 공통 원본 **§8**로 승격되어 전 프로젝트에 적용된다. 내용은 원본이 정본 — 여기서 중복 기술하지 않는다.
 
 ## 아키텍처 개요 (big picture)
 
-뼈대는 얇게. 이 앱은 **상태를 거의 갖지 않는 뷰어**다 — 채팅 로직·인증·소켓은 전부 원격 HeiChitty Chat 웹이 담당하고, 클라이언트는 그 웹을 띄울 뿐이다.
+뼈대는 얇게. 이 앱은 **상태를 거의 갖지 않는 뷰어**다 — 채팅 로직·인증·소켓은 전부 원격 HeiChitty-Chat 웹이 담당하고, 클라이언트는 그 웹을 띄울 뿐이다.
 
-- **진입 셸** `web/` — 바닐라 JS, 외부화(인라인 스크립트·스타일 금지), XSS-safe(`textContent`). `app.js`가 config 서버 주소로 **웹뷰 최상위를 이동**시킨다(`location.replace` — 셸을 히스토리에 안 남김). HeiChitty Chat은 `X-Frame-Options`로 iframe 임베드를 막으므로 iframe이 아닌 top-level navigation을 쓴다.
+- **진입 셸** `web/` — 바닐라 JS, 외부화(인라인 스크립트·스타일 금지), XSS-safe(`textContent`). `app.js`가 config 서버 주소로 **웹뷰 최상위를 이동**시킨다(`location.replace` — 셸을 히스토리에 안 남김). HeiChitty-Chat은 `X-Frame-Options`로 iframe 임베드를 막으므로 iframe이 아닌 top-level navigation을 쓴다.
 - **서버 주소 = 빌드 타임 config (config-only)** — `web/config.js`의 `window.HEICHITTY_SERVER` 단일값. 사용자에게 노출하지 않으며(런처·주소입력·자동접속 토글 없음), 앱은 그 주소로 **자동 접속**만 한다. 도달 불가/오프라인이면 상태화면에서 **재시도** 제공(online 복귀 시 자동 재시도). 운영/개발 전환은 `config.js` 한 줄 교체. `localStorage` 영속화·서버변경 기능은 없다(2026-06-22 결정).
 - **Capacitor 설정** `capacitor.config.json` — `appId`(`kr.co.heichitty.chat` — 2026-08-10 확정. 변경 시 `android/` 네이티브 패키지도 수기 동기화 필요), `webDir: web`, `server.allowNavigation`(원격 도메인 허용 — 현재 `["*"]`, 운영 서버 도메인 확정 시 **좁혀야 함**).
 - **데스크톱 네비게이션 seam** `electron/src/setup.ts` — 기본 템플릿은 커스텀 스킴 밖 이동을 막는다. 뷰어 동작을 위해 `isAllowedTarget`(자기 스킴 또는 http/https)로 완화함. 이 의도를 깨지 말 것.
