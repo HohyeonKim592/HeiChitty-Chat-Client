@@ -1,7 +1,8 @@
 # HeiChitty-Chat-Client
 
 웹 기반 **HeiChitty-Chat**을 데스크톱·모바일에서 띄우는 뷰어 앱입니다.
-Capacitor 웹뷰 래퍼 한 벌로 **Windows · macOS · Android · iOS**를 모두 대상으로 합니다.
+Capacitor 웹뷰 래퍼 한 벌로 **Windows · macOS · Android**를 대상으로 합니다.
+**iOS는 범위 밖입니다**(2026-08-12 — 무료 배포 경로가 없어 제외. 근거·재개 조건은 `docs/spec/02-epic-story.md` 「iOS — 범위 밖」).
 
 채팅·인증·실시간 로직은 전부 원격 HeiChitty-Chat 서버가 담당하고, 이 앱은 그 웹 화면을 띄우는 얇은 뷰어입니다.
 
@@ -26,10 +27,7 @@ Capacitor 웹뷰 래퍼 한 벌로 **Windows · macOS · Android · iOS**를 모
 |---|---|
 | 공통 | Node.js ≥ 20, npm |
 | Android | Android Studio + Android SDK (`ANDROID_HOME` 설정) |
-| iOS | **macOS** + Xcode + CocoaPods (`sudo gem install cocoapods`) |
-| Windows / macOS 데스크톱 | (Electron) 추가 도구 없음 |
-
-> iOS는 Apple 정책상 **macOS + Xcode에서만** 빌드됩니다.
+| Windows / macOS 데스크톱 | (Electron) 추가 도구 없음 — Windows 설치파일도 이 Mac에서 만듭니다 |
 
 ---
 
@@ -99,26 +97,19 @@ cd android
 
 ---
 
-## iOS (macOS 전용)
+## 코드 서명 — 하지 않습니다
 
-iOS 플랫폼은 아직 추가돼 있지 않습니다(빌드 머신에 Xcode/CocoaPods가 있어야 추가됨). 준비가 되면:
+**연 0원 방침**(2026-08-12)에 따라 유료 인증서·개발자 프로그램을 쓰지 않습니다. macOS·Windows 모두 **미서명 배포**입니다.
 
-```bash
-npm run add:ios          # = npx cap add ios  (CocoaPods 필요)
-npx cap sync ios
-npx cap open ios         # Xcode 열기 → 서명 설정 후 Run/Archive
-```
+| 플랫폼 | 사용자가 겪는 것 |
+|---|---|
+| Windows | SmartScreen 경고 — "추가 정보 → 실행" 클릭 필요. 자동업데이트는 정상 동작 |
+| macOS | 첫 실행 시 **시스템 설정 → 개인정보 보호 및 보안 → "확인 없이 열기"** + 관리자 인증 필요. **자동업데이트 불가**(서명이 전제라서) |
+| Android | 없음 — Android 서명은 원래 무료입니다 |
 
-Xcode에서 Archive → Distribute App으로 export한 ipa를 `release/ios/`로 모으려면:
+> macOS Sequoia(15)부터 control-click → 열기 우회는 동작하지 않습니다. 시스템 설정 경로를 안내하세요.
 
-```bash
-./scripts/collect-mobile.sh ios <ipa 경로>
-```
-
-> iOS는 플랫폼이 아직 추가되지 않아 Xcode의 export 경로가 확정되지 않았습니다. 그래서 경로를 인자로 받습니다.
-> 플랫폼 추가 후 경로가 고정되면 android처럼 자동 탐색으로 바꿉니다.
-
-정식 배포 시 Apple 개발자 계정과 코드 서명이 별도로 필요합니다.
+근거·유료 전환 시 참고값은 `docs/spec/03-signing.md`.
 
 ---
 
@@ -131,7 +122,6 @@ release/
 ├── mac/        HeiChitty-Chat-0.0.1-universal.dmg · blockmap · latest-mac.yml
 ├── win/        HeiChitty-Chat Setup 0.0.1.exe · blockmap · latest.yml
 ├── android/    app-debug.apk · app-release.aab      (collect-mobile.sh 로 수집)
-├── ios/        *.ipa                                 (collect-mobile.sh 로 수집)
 └── _archive/
     ├── mac/0.0.1-20260810-220354/       직전 산출물
     └── win/…                            KEEP개까지 보관, 초과분 자동 폐기
@@ -160,7 +150,7 @@ KEEP=0 ./scripts/build-desktop.sh mac     # 보관 없이 매번 폐기
 
 `capacitor.config.json`:
 
-- **`appId`** — `kr.co.heichitty.chat` (2026-08-10 확정). Android 패키지명·iOS Bundle ID로 사용됩니다. 이후 변경할 땐 `android/app/build.gradle`의 `namespace`·`applicationId`, `android/app/src/main/java/` 패키지 디렉토리, `strings.xml`의 `package_name`·`custom_url_scheme`도 함께 고쳐야 합니다 — `cap sync`로는 갱신되지 않습니다.
+- **`appId`** — `kr.co.heichitty.chat` (2026-08-10 확정). Android 패키지명으로 사용됩니다. 이후 변경할 땐 `android/app/build.gradle`의 `namespace`·`applicationId`, `android/app/src/main/java/` 패키지 디렉토리, `strings.xml`의 `package_name`·`custom_url_scheme`도 함께 고쳐야 합니다 — `cap sync`로는 갱신되지 않습니다.
 - **`appName`** — 표시 이름. 현재 `HeiChitty-Chat`.
 - **`server.allowNavigation`** — 현재 `["127.0.0.1"]` (2026-08-12 `["*"]`에서 좁힘, `CE3-S2` 완료).
   - ⚠️ **URL이 아니라 호스트 마스크입니다.** Capacitor는 `HostMask.matches(url.getHost())`로 판정하므로 `http://127.0.0.1:3000` 같은 전체 URL을 넣으면 **매칭되지 않아 접속이 막힙니다**. `config.js` 주소에서 **호스트만** 뽑아 적으세요(스킴·포트는 표현 불가 — 해당 호스트의 모든 포트가 열립니다).
@@ -180,7 +170,7 @@ HeiChitty-Chat-Client/
 ├─ capacitor.config.json
 ├─ scripts/             # 빌드·산출물 관리
 │  ├─ build-desktop.sh  # mac|win 배포 빌드 (정리→sync→tsc→패키징)
-│  ├─ collect-mobile.sh # android|ios 산출물을 release/ 로 수집
+│  ├─ collect-mobile.sh # android 산출물을 release/ 로 수집
 │  └─ lib/release-store.sh  # 아카이브·폐기 공통 로직 (source 전용, 위 둘이 공유)
 ├─ test/
 │  └─ ce1-shell.mjs     # CE1 셸 스모크 (zero-dep, npm test)
@@ -194,4 +184,4 @@ HeiChitty-Chat-Client/
 └─ CLAUDE.md            # 작업원칙
 ```
 
-> `ios/`는 아직 없습니다(`npm run add:ios` 미실행 — Xcode·CocoaPods 필요).
+> `ios/`는 없습니다 — iOS는 범위 밖입니다(2026-08-12).

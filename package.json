@@ -11,11 +11,9 @@
     "test:ce1": "node test/ce1-shell.mjs",
     "sync": "cap sync",
     "open:android": "cap open android",
-    "open:ios": "cap open ios",
     "open:electron": "cap open @capacitor-community/electron",
     "run:electron": "cap sync @capacitor-community/electron && cd electron && npm run electron:start-live",
-    "build:android": "cap sync android && cap open android",
-    "add:ios": "cap add ios"
+    "build:android": "cap sync android && cap open android"
   },
   "engines": {
     "node": ">=20"

@@ -16,19 +16,25 @@
   - 사후 검증: GitHub API로 공개 커밋 17건 전수 author 확인 → 전부 `gimhyeon592@gmail.com`
   - **폴더 단위 공개/비공개는 불가능**(GitHub visibility는 리포 전체 단위 — git이 트리 전체를 해시로 묶기 때문). `docs/`는 그대로 공개하기로 함
   - ⚠️ 로컬 `backup/pre-mail-*` 브랜치에 구 이력(업무 이메일)이 남아 있다. **push 금지**
-- [ ] **`CE5-S1` 선행 3건** — ① mac 타깃에 `zip` 추가(현재 `dmg` 단독 → Squirrel.Mac 자동업데이트 불가) ② `publish`에 `owner`/`repo` 명시 ③ macOS 코드 서명〔G-SIGN〕 없이는 macOS 자동업데이트가 동작하지 않음
-- [x] **G-SIGN 서명 방법 조사 완료** (2026-08-12) — 요건·비용·절차 정본은 **`spec/03-signing.md`**. 아래는 그 결과로 생긴 실행 항목이다
+- [x] **G-SIGN 방침 확정** (2026-08-12) — **연 0원 = 미서명 배포.** 근거·상세는 **`spec/03-signing.md`**
+- [–] ~~Xcode + CocoaPods 설치~~ · ~~App Store 심사 리스크 확인~~ · ~~Apple Developer Program 가입~~ — **iOS 범위 밖 결정으로 소멸**(2026-08-12)
 
-### G-SIGN 후속 실행 항목 (순서대로)
+### `CE5-S1` 선행 (자동 업데이트 — **Windows 전용**)
 
-- [ ] **① Apple Developer Program 가입** 〔사용자 작업 · USD 99/년〕 — iOS·macOS 양쪽의 유일한 관문. **`CE5-S1`(macOS 자동업데이트)을 지금 막고 있는 것이 이것**이라 가장 먼저. 무료 티어로는 배포 불가
-- [ ] **② Google Play 계정 종류 결정** (개인 vs 조직) 〔결정 + USD 25 1회〕 — **개인 계정은 「테스터 12명 × 연속 14일」 의무**(2023-11-13 이후 생성분), 조직 계정은 면제. 계정을 만들기 **전에** 정할 것
-- [ ] **③ SignPath Foundation 자격 확인** — 오픈소스 무료 코드서명. **리포 public 전환으로 후보가 됨**. 성립하면 Windows 연 $150–300 → 0원. 자격 요건 미확인
-- [ ] **④ electron-builder 24+ 업그레이드** — macOS 공증의 전제. 현재 23.6.0에는 `notarize` 옵션이 없다(실측). 업그레이드 시 회귀 확인 필요(패키징 빌드까지)
-- [ ] **⑤ Windows 인증서 확보** — ③이 불발일 때만. OV $150–300/년. ⚠️ **Microsoft 권장안 Azure Artifact Signing은 한국에서 사용 불가**(지역 제한). EV는 2024년부터 SmartScreen 이점이 없어져 프리미엄 불필요
-- [ ] **Xcode + CocoaPods 설치** 〔사용자 작업〕 — G-IOS 전제. 용량·라이선스 동의 때문에 대행 불가. 설치 후 `npm run add:ios`(CE0-S6)부터 진행
-- [ ] **스토어 계정 준비** — Google Play Console(등록비 1회) · Apple Developer Program(연간). `CE2-S2`·`CE2-S3` 선행조건
-- [ ] **App Store 심사 리스크 확인** — 원격 웹 뷰어라 Apple 심사지침 4.2(Minimum Functionality) 적용 가능성. 조항 존재는 사실이나 **이 앱에 어떻게 적용될지는 미조사**. 공개 App Store 목표라면 심사 전 확인 필요
+> macOS 자동업데이트는 서명이 전제라 「연 0원」 방침에서 포기했다. macOS 사용자는 새 dmg를 직접 받아 재설치한다.
+
+- [ ] **① `win.verifyUpdateCodeSignature: false`** — 기본값이 `true`라 미서명 빌드에서는 업데이트 설치가 거부된다(실측: `winOptions.d.ts:74`)
+- [ ] **② `publish`에 `owner`/`repo` 명시**
+- [ ] **③ `electron/src/index.ts`의 `.catch()` 삼킴 재검토** — 2026-08-10 응급조치분. 피드가 정상화되면 다시 볼 것
+- [–] ~~mac 타깃에 `zip` 추가~~ — macOS 자동업데이트를 포기했으므로 불필요해짐
+
+### 모바일 채널 — ⏸ 최종단계 검토 (2026-08-12 결정)
+
+> 등록비 **$25는 최초 1회뿐**(연회비 없음)이라 「연 0원」 방침과 충돌하지 않는다. 무료 앱이라 Google 수수료도 무관.
+> 상세·완화책은 `spec/02-epic-story.md` 「Play 계정 — 최종단계 함정」.
+
+- [ ] **⚠️ 최종단계 전에 Play 계정 종류만은 정해둘 것** — **개인 계정은 「테스터 12명 × 연속 14일」 의무**이고, **계정을 나중에 만들어도 피할 수 없다**(2023-11-13 이후 생성분 전부 적용). 조직 계정만 면제.
+  최종단계에 가서 개인 계정으로 정하면 **그때부터 2주를 기다린다.** 미리 정해두면 대기시간이 다른 작업과 겹쳐 사라진다
 - [x] **`CE3-S2` `allowNavigation` 좁히기** — 2026-08-12 완료. `["*"]` → **`["127.0.0.1"]`**. 종전 지침("`web/config.js`와 같은 값")은 **틀린 것으로 확인**돼 정정 — 이 설정은 URL이 아니라 호스트 마스크다(상세는 `spec/02-epic-story.md` `CE3-S2`)
 
 ## 🔼 남은 검증 후보 (최우선 — 2026-08-10 Desktop 실기검증 반영)
@@ -37,14 +43,14 @@
 
 - [ ] **접속→로그인→채팅 끝단 동선** — 로그인 성공 이후 구간 미검증 (세션 유지: `wc_token` HttpOnly 쿠키 + `GET /me` 복원). *로그인 화면 렌더까지는 2026-08-10 확인*
 - [ ] **OS 수준 실제 오프라인** — 2026-08-10 검증의 오프라인 분기는 `navigator.onLine` 오버라이드였다(CDP 오프라인 에뮬레이션이 `navigator.onLine`을 뒤집지 않아서). 실제 네트워크 해제 시 동작은 미확인
-- [ ] **모바일 preflight/CSP 동등 검증** — Android/iOS 웹뷰에서도 preflight `fetch`가 막히는지. Electron에서 터진 문제라 웹뷰별 확인 필요
+- [ ] **모바일 preflight/CSP 동등 검증** — Android 웹뷰에서도 preflight `fetch`가 막히는지. Electron에서 터진 문제라 웹뷰별 확인 필요
 - [ ] **dmg/exe 실제 설치 테스트** — 산출물 생성·기동은 확인. 설치 과정(dmg 마운트→드래그, NSIS 마법사)은 미검증. 미서명이라 Gatekeeper·SmartScreen 경고 예상
 - [ ] **Windows 실기 실행** — exe를 이 Mac에서 만들었을 뿐 Windows에서 실행해 보지 않았다
 - [ ] **Electron 창을 CLI에서 확인 불가** — `screencapture` 미포착 + System Events 창 0개 보고. **원인 미확인**. ~~`windowStateKeeper` 좌표가 화면 밖~~ 가설은 **틀렸다**(실제 저장값 `{x:256,y:91,1000x800}` / `displayBounds 1512x982` = 화면 안). 앱 자체는 TCP 연결로 정상 확인됨 → **CLI 관측의 한계**로 보이며 육안 확인 필요
 - [ ] **Android 실기** — 첫 화면에서 원격으로 자동접속(`location.replace`로 셸 미잔류 확인). 하드웨어 뒤로가기 정책은 CE4-S1
-- [ ] **iOS** — 자동접속 동선 (iOS 빌드환경 확보 후, CE0-S6/CE2-S3)
 - [ ] **로그인 후 채팅 기능 전반** — 메시지 송수신·방 진입·DM 등 뷰어 통과 확인(기능 자체는 서버 책임)
-- [ ] **Android/iOS 빌드 산출물 실행**(CE2) — http 서버 접속 시 cleartext/ATS 설정 필요(CE3)
+- [ ] **Android 빌드 산출물 실행**(CE2) — http 서버 접속 시 cleartext 설정 필요(CE3)
+- [ ] **미서명 배포의 실사용자 경험 확인** — macOS Sequoia의 「확인 없이 열기」 동선 · Windows SmartScreen 경고 화면. 사용자 안내문을 쓰려면 실기로 봐야 한다
 - [ ] **`${os}` 매크로 실기 검증** — `directories.output: "../release/${os}"`가 실제로 `release/mac`·`release/win`을 만드는지는 **아직 빌드로 확인하지 않았다**. 근거는 electron-builder 소스·문서뿐(`packager.ts`의 `// support os and arch macro in output value`). 다음 데스크톱 빌드(`./scripts/build-desktop.sh mac`) 때 확인할 것
 
 ## 🔧 정리 후보 (기술부채 — 급하지 않음)
@@ -53,12 +59,16 @@
 
 ## 최근 완료 (2026-08-12)
 
-- **G-SIGN 서명 요건 조사** — 4플랫폼 요건·비용·절차를 `spec/03-signing.md`로 정리. 연간 고정비 = Apple $99 + (Windows OV $150–300 또는 SignPath 0원) + Play $25(1회)
-  - 🔴 **Microsoft 권장안이 한국에서 막힌다** — Azure Artifact Signing은 조직 미국·캐나다·EU·영국, 개인 미국·캐나다 한정. OV 인증서가 현실적 선택지
-  - 🔴 **EV 인증서는 무의미해졌다** — 2024년 Microsoft가 EV의 SmartScreen 즉시 통과를 제거. $400+/년을 내도 OV와 동일하게 평판을 쌓아야 한다
-  - 🔴 **Play 개인 계정은 「테스터 12명 × 14일」 의무** — 조직 계정은 면제. 출시 일정에 2주가 강제 추가
-  - 🔴 **현재 툴체인으로 macOS 공증 불가** — electron-builder 23.6.0에 `notarize` 필드 0건(실측), 내장 옵션은 24부터. `altool`은 2023-11-01부터 Apple이 거부
-  - 🟢 **SignPath Foundation** — 오픈소스 무료 코드서명. 리포 public 전환으로 후보가 됨(자격 요건 미확인)
+- **iOS 범위 밖 + 연 0원 방침 확정** — 대상 플랫폼이 **Windows·macOS·Android 3종**이 됐다. 근거·재개 조건은 `spec/02-epic-story.md` 「iOS — 범위 밖」
+  - **iOS는 무료 배포 경로가 없는 유일한 플랫폼** — Apple Developer Program(연 $99) 없이는 배포 불가. 「연 0원」과 양립하지 않는다
+  - 함께 소멸: **G-IOS 게이트**(Xcode 설치 — 사용자 작업 하나 감소) · **App Store 심사 4.2 리스크**(불확실성 제거 = 부수 이득) · `CE0-S6` · `CE2-S3`
+  - **코드에는 흔적이 없었다** — `cap add ios` 미실행이라 `ios/` 폴더가 애초에 없다. 제거한 건 진입점뿐(`package.json` 2줄 · `.gitignore` 3줄 · `collect-mobile.sh` 인자 분기)
+  - **macOS 자동업데이트 포기** — 서명이 전제라서. `CE5-S1`은 **Windows 전용**이 됐다
+  - 미서명 Windows 자동업데이트는 **`verifyUpdateCodeSignature: false`가 필요**하다(기본 `true` — 실측)
+- **G-SIGN 서명 요건 조사** — `spec/03-signing.md`로 정리. 유료 전환 시 참고값은 같은 문서 부록에 보존
+  - 🔴 **Microsoft 권장안이 한국에서 막힌다** — Azure Artifact Signing은 조직 미국·캐나다·EU·영국, 개인 미국·캐나다 한정
+  - 🔴 **EV 인증서는 무의미해졌다** — 2024년 Microsoft가 EV의 SmartScreen 즉시 통과를 제거. $400+/년을 내도 OV와 동일
+  - 🟢 **유료의 실익이 작다는 것이 0원 결정의 근거** — OV를 사도 초기 SmartScreen 경고는 그대로 뜬다(평판 기반). Microsoft Store MSIX는 계정비가 2026년 무료화돼 0원+경고없음이 가능하나 자동업데이트를 포기해야 해 미채택
 - **리포 public 전환** — 데스크톱 배포 채널(A안)의 전제. 순서: 업무 이메일 제거 → `allowNavigation` 좁히기 → `main` 병합 → 전환. 사후 검증까지 완료
 - **`CE3-S2` `allowNavigation` 좁히기 — `["*"]` → `["127.0.0.1"]`** (G-DOM 통과). 착수하며 **기존 지침이 틀렸음을 소스로 확인**: 이 설정은 URL이 아니라 **호스트 마스크**다(`Bridge.java:395`가 `HostMask.matches(url.getHost())`, `HostMask.java:114`가 `.` 단위 분리). 문서대로 `http://127.0.0.1:3000`을 넣었다면 **매칭 실패로 접속이 막혔을 것**
   - 파생 정정: **B-1′ 폐기** — 호스트만으로는 스킴·포트를 복원할 수 없어 `connect-src` 파생원이 될 수 없다
@@ -72,9 +82,9 @@
 
 - **아카이브·폐기 로직 공통화** — `archive_and_prune()`가 두 스크립트에 중복돼 있던 것을 `scripts/lib/release-store.sh`로 분리(`release_store_init`/`release_store_rotate`/`release_store_rel`). 경로·버전·타임스탬프·`KEEP` 파생까지 lib이 맡아 중복이 더 줄었다. source 전용이라 실행권한 없음. 더미 apk로 1~3회차 + `KEEP=0` 회귀 검증
 - **산출물 관리 체계 정비** — 플랫폼별 분리 + 빌드 시마다 폐기분 자동 처리. 상세는 `spec/02-epic-story.md` `CE2-S0`
-  - `release/{mac,win,android,ios}/` 최신 1벌 · `release/_archive/<os>/<버전>-<시각>/` 직전 `KEEP`벌(기본 2, 환경변수 조정)
+  - `release/{mac,win,android}/` 최신 1벌 · `release/_archive/<os>/<버전>-<시각>/` 직전 `KEEP`벌(기본 2, 환경변수 조정)
   - `scripts/build-desktop.sh <mac|win>` — 정리 → sync → tsc → 패키징 → 중간산출물 삭제. electron-builder 호출 함정 2개를 구조적으로 차단
-  - `scripts/collect-mobile.sh <android|ios>` — gradle·Xcode 산출물을 `release/` 아래로 수집. **iOS는 플랫폼 미추가라 ipa 경로를 인자로 받는다**(`CE2-S3` 때 자동 탐색으로 전환)
+  - `scripts/collect-mobile.sh android` — gradle 산출물을 `release/` 아래로 수집 *(ios 인자 분기는 2026-08-12 제거)*
   - 폐기분 332MB 삭제 → `release/` 576MB → 244MB
 
 ## 최근 완료 (2026-08-10)
@@ -115,6 +125,6 @@
 ## 다음 작업 (참고)
 
 - 수동·실기 재검증 (위 검증 후보 — 시나리오 A 재검증·오프라인 동선 우선)
-- Wave 0 남은 결정: **G-SIGN(서명 방법)·G-IOS(Xcode 설치)** 둘뿐 — G-DOM·G-DIST는 통과
+- **Wave 0 결정 완료** — G-ID·G-DOM·G-SIGN·G-DIST(데스크톱) 확정, G-IOS 폐기, 모바일 채널은 최종단계 이월. **착수를 막는 결정은 더 없다**
 - ~~**`connect-src` 파생원 격상 검토(B-1′)**~~ — **폐기(2026-08-12)**. `allowNavigation`은 호스트만 담아 스킴·포트를 복원할 수 없으므로 `connect-src`의 파생원이 될 수 없다. `web/config.js` 파싱(B-1) 유지 — 즉 `setup.ts`와 `app.js`의 **스킴 보정 규칙 동기화 의무는 계속 남는다**
 - CE6-S4: pre-push 훅(lint+smoke 자동화) — 원격이 생겨 착수 가능

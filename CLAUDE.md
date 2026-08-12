@@ -27,7 +27,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - 계획용 최소 읽기/grep은 가능하나, **광범위한 다단계 코드 탐색을 자동 연쇄하지 말 것.**
 
 ## 3. 스코프 — 이 경로의 추가 조항
-- **네이티브 플랫폼 폴더(`android/`, `electron/`)는 Capacitor가 생성한 산출물**이다. `npx cap add`/`cap sync`로 재생성·갱신되는 영역이므로 직접 수정은 최소화하고, 불가피하게 손댈 땐(예: 보안 핸들러 조정) 변경 의도를 주석으로 남긴다. **`ios/`는 아직 없다** — `npm run add:ios` 미실행(Xcode·CocoaPods 필요).
+- **네이티브 플랫폼 폴더(`android/`, `electron/`)는 Capacitor가 생성한 산출물**이다. `npx cap add`/`cap sync`로 재생성·갱신되는 영역이므로 직접 수정은 최소화하고, 불가피하게 손댈 땐(예: 보안 핸들러 조정) 변경 의도를 주석으로 남긴다. **`ios/`는 없다 — iOS는 범위 밖**(2026-08-12, 무료 배포 경로 부재). 근거·재개 조건은 `docs/spec/02-epic-story.md` 「iOS — 범위 밖」.
 - **`release/`는 빌드 산출물 영역**이다. 전체가 `.gitignore` 처리돼 있고 커밋 대상이 아니다. 손으로 파일을 옮기지 말고 `scripts/build-desktop.sh`·`scripts/collect-mobile.sh`가 관리하게 둔다(정책은 `README.md` 「산출물 관리」).
 
 ## 4. Git — 이 경로의 추가 조항
@@ -51,7 +51,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **데스크톱 네비게이션 seam** `electron/src/setup.ts` — 기본 템플릿은 커스텀 스킴 밖 이동을 막는다. 뷰어 동작을 위해 `isAllowedTarget`(자기 스킴 또는 http/https)로 완화함. 이 의도를 깨지 말 것.
 - **데스크톱 CSP seam** — 같은 파일 `setupContentSecurityPolicy()`. 템플릿은 "로컬 자산 전용 앱" 전제라 원격 응답의 CSP까지 덮어쓴다 → **셸(커스텀 스킴) 응답에만** 적용하도록 좁혀 뒀다. 그리고 `readShellServerOrigin()`이 `app/config.js`를 정규식으로 읽어 `connect-src`를 만든다 — 여기의 스킴 보정 규칙은 `web/app.js`의 `defaultSchemeFor()`/`normalize()`와 **반드시 같아야 한다.** 갈리면 도달성 preflight가 CSP에 조용히 막혀, 서버가 살아 있어도 늘 "서버에 연결할 수 없습니다"가 된다(2026-08-10 실제 발생). 둘 중 하나를 고치면 다른 하나도 고칠 것.
 - **셸 스모크·개발모드가 못 보는 층이 있다** — 목 `fetch`에는 CSP가 없어 스모크는 9/9 통과하고 `electron:start-live`도 정상인데 **패키징 빌드에서만** 터진 사고가 두 번 있었다(위 CSP 건 / `electron/src/index.ts`의 autoUpdater 404 → 모달로 기동 정지). 접속 경로·Electron 메인 프로세스를 건드렸으면 `./scripts/build-desktop.sh mac`으로 패키징본까지 확인한다. 패키징 앱은 CDP가 안 붙어 로그·TCP·화면으로 진단해야 한다.
-- **플랫폼별 빌드 전제** — iOS=Mac+Xcode+CocoaPods, Android=Android SDK. 코드는 한 벌, 빌드는 플랫폼별 도구 필요. 절차는 `README.md`.
+- **플랫폼별 빌드 전제** — Android=Android SDK, 데스크톱=Node+electron-builder(Windows 빌드도 이 Mac에서 처리). 코드는 한 벌, 빌드는 플랫폼별 도구 필요. 절차는 `README.md`.
+- **서명은 하지 않는다** — 연 0원 방침(2026-08-12). macOS·Windows 모두 미서명 배포이고, 그 결과 **macOS 자동업데이트는 불가**하다(`CE5-S1`은 Windows 전용). 상세는 `docs/spec/03-signing.md`.
 
 ### 값 하나를 바꾸면 따라오는 곳
 
@@ -71,8 +72,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | 네이티브에 웹 자산 반영 | `npx cap sync` — ⚠️ **electron은 포함되지 않는다.** 데스크톱까지 반영하려면 `npx cap sync @capacitor-community/electron`을 따로 (`run:electron`·`build-desktop.sh`는 이미 그렇게 부른다) |
 | 데스크톱 개발 실행(창 띄우기) | `npm run run:electron` — sync 후 `electron:start-live`(웹 자산 변경 자동 반영) |
 | 데스크톱 배포 빌드 | `./scripts/build-desktop.sh <mac\|win>` — 정리→sync→tsc→패키징 일괄. `KEEP=<n>`으로 아카이브 개수 조정 |
-| 모바일 산출물 수집 | `./scripts/collect-mobile.sh <android\|ios>` |
-| iOS 플랫폼 추가(미실행) | `npm run add:ios` — Xcode·CocoaPods 필요 |
+| 모바일 산출물 수집 | `./scripts/collect-mobile.sh android` |
 
 - 테스트는 **CE1 스모크 한 벌**(`test/ce1-shell.mjs`)이 전부다. zero-dep — 브라우저 전역(+ `window.HEICHITTY_SERVER`)을 목으로 깔고 `app.js`를 캐시버스트로 재로딩해 config 정규화·자동접속(`location.replace`)·도달성점검·오프라인·재시도를 직접 검증한다. 시나리오 추가는 이 파일에 함수로 붙인다.
 - `app.js`는 import 즉시 top-level에서 `attemptConnect()`를 실행하므로, 테스트는 시나리오마다 전역을 새로 설치한 뒤 모듈을 재로딩한다 — 새 시나리오 작성 시 이 패턴을 따를 것.
@@ -85,7 +85,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | 할 일·남은 검증 후보(작업 큐) | `docs/TODO.md` |
 | 단계화 로드맵(EPIC·STORY·게이트) | `docs/spec/02-epic-story.md` |
 | 코드 서명 요건·비용·절차(G-SIGN) | `docs/spec/03-signing.md` |
-| 4플랫폼 빌드·실행 절차 | `README.md` |
+| 3플랫폼 빌드·실행 절차 | `README.md` |
 | 산출물 관리(플랫폼별 분리·아카이브·폐기 정책) | `README.md` 「산출물 관리」 |
 | 빌드·수집 스크립트 | `scripts/build-desktop.sh` · `scripts/collect-mobile.sh` |
 | 뷰어 진입 로직 | `web/app.js` |
