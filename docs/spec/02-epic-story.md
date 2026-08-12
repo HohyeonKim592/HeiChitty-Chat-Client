@@ -77,7 +77,9 @@
   - 언팩 앱 번들(`mac-arm64/` 237MB)·아이콘 캐시는 재생성 가능한 중간산출물이라 아카이브 없이 빌드 직후 삭제
   - iOS는 플랫폼 미추가로 Xcode export 경로가 미확정 — ipa 경로를 인자로 받는다. `CE2-S3` 때 자동 탐색으로 전환할 것
   - 착수 시점 정리: 폐기분 332MB 삭제(arch 덮임 실패분 `-arm64.dmg` + `mac-arm64/`) → `release/` 576MB → 244MB
-- [ ] `CE2-S2` **Android 서명 빌드** — release keystore + AAB/APK 〔G-SIGN〕. 공개 스토어 확정(2026-08-11)이라 **Play Console 등록 + AAB 업로드**가 목표 형태
+- [ ] `CE2-S2` **Android 서명 빌드** — release keystore + AAB 〔G-SIGN〕. 공개 스토어 확정(2026-08-11)이라 **Play Console 등록 + AAB 업로드**가 목표 형태. 요건 상세는 **`03-signing.md`**
+  - **Play 앱 서명 필수**(2021-08 이후 신규 앱) — 업로드 키로 서명해 올리면 Google이 앱 서명 키로 재서명한다. 키 유효기간은 2033-10-22 이후로 끝나야 한다
+  - ⚠️ **계정 종류를 먼저 정할 것** — 2023-11-13 이후 만든 **개인 계정**은 프로덕션 전 「테스터 12명 × 연속 14일」 비공개 테스트가 의무다(**조직 계정 면제**). 출시까지 최소 2주가 강제로 추가된다
 - [ ] `CE2-S3` **iOS 빌드·서명** — Xcode 프로젝트(CE0-S6 후) + Apple 개발자계정·프로비저닝 〔G-IOS·G-SIGN〕
   - ⚠️ **App Store 심사 리스크(미확인)** — 이 앱은 원격 웹을 그대로 띄우는 뷰어다. Apple 심사지침 **4.2 Minimum Functionality**가 웹 래퍼에 적용되는 사례가 알려져 있어, 공개 App Store를 목표로 하면 이 리스크를 먼저 확인해야 한다. *지침 조항의 존재는 사실이나 이 앱에 실제로 어떻게 적용될지는 미조사 — 심사 전 확인 필요*
 - [~] `CE2-S4` 배포 채널 확정·산출물 정의 〔G-DIST〕 — **채널 전부 확정**: 모바일 = 공개 스토어(2026-08-11) · **데스크톱 = GitHub Releases + `electron-updater`(2026-08-12, 안 A)**
@@ -109,7 +111,8 @@
 - [ ] `CE5-S1` **Desktop** — `electron-updater`(피드 URL·서명·롤백). **채널 = GitHub Releases 확정(2026-08-12)**. 착수 전 아래 3건이 선행돼야 실제로 동작한다
   - 🔴 **리포 public 전환** — private 리포로 업데이트하려면 `GH_TOKEN`을 **최종 사용자 머신에** 심어야 한다(electron-builder 문서: *"아주 특수한 경우용, 모든 사용자에게 적합하지 않다"*). **2026-08-10 autoUpdater 404 모달 사고의 실제 원인이 이것**이었다. → public 전환으로 해소(2026-08-12 결정)
   - 🔴 **mac 타깃에 `zip` 추가** — 현재 `electron-builder.config.json`의 mac 타깃이 `dmg` 단독이다. **`zip`은 Squirrel.Mac 필수**이고(문서: *"dmg 패키지에서 zip을 끄면 자동업데이트가 깨진다"*, 기본값이 `dmg`+`zip`), 지금 생성되는 `latest-mac.yml`은 dmg만 가리켜 업데이트 적용 단계에서 동작하지 않는다
-  - 🔴 **macOS 코드 서명** 〔G-SIGN〕 — 문서 원문: *"macOS 앱은 자동업데이트가 동작하려면 반드시 서명되어야 한다"*. Windows는 미서명으로도 업데이트 자체는 동작(SmartScreen 경고만)
+  - 🔴 **macOS 코드 서명 + 공증** 〔G-SIGN〕 — 문서 원문: *"macOS 앱은 자동업데이트가 동작하려면 반드시 서명되어야 한다"*. Windows는 미서명으로도 업데이트 자체는 동작(SmartScreen 경고만)
+    - **현재 툴체인으로는 공증이 안 된다**(2026-08-12 실측): `electron-builder 23.6.0`의 `macOptions.d.ts`에 `notarize` 필드 0건 — 내장 옵션은 **24부터**다. `altool`은 2023-11-01부터 Apple이 거부(`notarytool` 필수). → **electron-builder 24+ 업그레이드**가 사실상 선행조건. 상세는 `03-signing.md`
   - `publish` 설정에 `owner`/`repo` 명시 + `electron/src/index.ts`의 `.catch()` 삼킴 재검토(2026-08-10 응급조치분)
   - `.blockmap`은 이미 생성되고 있다(mac 175K · win 81K) — 차등 다운로드로 실 대역폭은 더 줄어든다
 - [ ] `CE5-S2` **모바일** — 스토어/사내 배포에 맞춘 업데이트 전략 + 강제 최소버전(원격 게이트) 〔G-DIST 의존〕
@@ -129,7 +132,7 @@
 | **G-ID** appId 확정 | CE3-S1 (배포 전) | 정식 번들 ID 확정 | ✅ 통과 — `kr.co.heichitty.chat`(2026-08-10). Android 패키지명·iOS Bundle ID 공용 |
 | **G-DOM** 허용 도메인 | CE3-S2 | `allowNavigation`을 접속 대상으로 한정 | ✅ **통과** — 방향 확정(2026-08-11, 같은 Mac mini 루프백) + **좁히기 완료**(2026-08-12, `["*"]` → `["127.0.0.1"]`). 운영 도메인은 추후 도입 시 호스트만 교체 |
 | **G-IOS** iOS 빌드환경 | CE0-S6/CE2-S3 | Mac+Xcode+CocoaPods 확보, `cap add ios` 성공 | 🔴 미통과 — **Xcode·CocoaPods 설치 필요**(2026-08-11 확인). Xcode는 용량·라이선스 동의 때문에 **사용자가 직접 설치**해야 한다. 설치 후 `npm run add:ios`부터 진행 |
-| **G-SIGN** 코드 서명 | CE2-S2/S3 | Android keystore · Apple 인증서 · 데스크톱 서명 | 🔴 미정 — **서명 방법 조사 필요**(2026-08-11). 공개 스토어 확정으로 요구사항은 정해졌다: Play 앱 서명/keystore · Apple 인증서+프로비저닝 · (스토어 밖 데스크톱 배포 시) Windows 코드서명. 현재 dmg/exe는 미서명 |
+| **G-SIGN** 코드 서명 | CE2-S2/S3 | Android keystore · Apple 인증서 · 데스크톱 서명 | 🟡 **조사 완료(2026-08-12) · 계정 미개설** — 요건·비용·절차는 **`03-signing.md`가 정본**. 연간 고정비 = Apple $99 + (Windows OV $150–300 또는 SignPath 0원) + Play $25(1회). 통과 조건은 실제 계정·인증서 확보. 현재 dmg/exe는 미서명 |
 | **G-DIST** 배포 채널 | CE2-S4 | 사내배포 / 공개 스토어 택일 | ✅ **완전 통과** — 모바일 = 공개 스토어(2026-08-11, Google Play · Apple App Store) · 데스크톱 = **GitHub Releases + `electron-updater`**(2026-08-12). 후속: 리포 public 전환·mac `zip` 타깃 추가는 `CE5-S1` |
 
 ## 진행 순서 (Wave)

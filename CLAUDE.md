@@ -84,6 +84,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 |---|---|
 | 할 일·남은 검증 후보(작업 큐) | `docs/TODO.md` |
 | 단계화 로드맵(EPIC·STORY·게이트) | `docs/spec/02-epic-story.md` |
+| 코드 서명 요건·비용·절차(G-SIGN) | `docs/spec/03-signing.md` |
 | 4플랫폼 빌드·실행 절차 | `README.md` |
 | 산출물 관리(플랫폼별 분리·아카이브·폐기 정책) | `README.md` 「산출물 관리」 |
 | 빌드·수집 스크립트 | `scripts/build-desktop.sh` · `scripts/collect-mobile.sh` |

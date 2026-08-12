@@ -17,7 +17,15 @@
   - **폴더 단위 공개/비공개는 불가능**(GitHub visibility는 리포 전체 단위 — git이 트리 전체를 해시로 묶기 때문). `docs/`는 그대로 공개하기로 함
   - ⚠️ 로컬 `backup/pre-mail-*` 브랜치에 구 이력(업무 이메일)이 남아 있다. **push 금지**
 - [ ] **`CE5-S1` 선행 3건** — ① mac 타깃에 `zip` 추가(현재 `dmg` 단독 → Squirrel.Mac 자동업데이트 불가) ② `publish`에 `owner`/`repo` 명시 ③ macOS 코드 서명〔G-SIGN〕 없이는 macOS 자동업데이트가 동작하지 않음
-- [ ] **G-SIGN 서명 방법 조사** — 공개 스토어 기준 4플랫폼 서명 요건 정리: Android(Play 앱 서명 vs 자체 keystore) · iOS(Apple 인증서·프로비저닝) · Windows(코드서명 인증서 — 스토어 밖 배포 시 SmartScreen 경고 제거용) · macOS(Developer ID + notarization). **`CE5-S1`의 선행조건이기도 하다**(macOS 자동업데이트 = 서명 필수)
+- [x] **G-SIGN 서명 방법 조사 완료** (2026-08-12) — 요건·비용·절차 정본은 **`spec/03-signing.md`**. 아래는 그 결과로 생긴 실행 항목이다
+
+### G-SIGN 후속 실행 항목 (순서대로)
+
+- [ ] **① Apple Developer Program 가입** 〔사용자 작업 · USD 99/년〕 — iOS·macOS 양쪽의 유일한 관문. **`CE5-S1`(macOS 자동업데이트)을 지금 막고 있는 것이 이것**이라 가장 먼저. 무료 티어로는 배포 불가
+- [ ] **② Google Play 계정 종류 결정** (개인 vs 조직) 〔결정 + USD 25 1회〕 — **개인 계정은 「테스터 12명 × 연속 14일」 의무**(2023-11-13 이후 생성분), 조직 계정은 면제. 계정을 만들기 **전에** 정할 것
+- [ ] **③ SignPath Foundation 자격 확인** — 오픈소스 무료 코드서명. **리포 public 전환으로 후보가 됨**. 성립하면 Windows 연 $150–300 → 0원. 자격 요건 미확인
+- [ ] **④ electron-builder 24+ 업그레이드** — macOS 공증의 전제. 현재 23.6.0에는 `notarize` 옵션이 없다(실측). 업그레이드 시 회귀 확인 필요(패키징 빌드까지)
+- [ ] **⑤ Windows 인증서 확보** — ③이 불발일 때만. OV $150–300/년. ⚠️ **Microsoft 권장안 Azure Artifact Signing은 한국에서 사용 불가**(지역 제한). EV는 2024년부터 SmartScreen 이점이 없어져 프리미엄 불필요
 - [ ] **Xcode + CocoaPods 설치** 〔사용자 작업〕 — G-IOS 전제. 용량·라이선스 동의 때문에 대행 불가. 설치 후 `npm run add:ios`(CE0-S6)부터 진행
 - [ ] **스토어 계정 준비** — Google Play Console(등록비 1회) · Apple Developer Program(연간). `CE2-S2`·`CE2-S3` 선행조건
 - [ ] **App Store 심사 리스크 확인** — 원격 웹 뷰어라 Apple 심사지침 4.2(Minimum Functionality) 적용 가능성. 조항 존재는 사실이나 **이 앱에 어떻게 적용될지는 미조사**. 공개 App Store 목표라면 심사 전 확인 필요
@@ -45,6 +53,12 @@
 
 ## 최근 완료 (2026-08-12)
 
+- **G-SIGN 서명 요건 조사** — 4플랫폼 요건·비용·절차를 `spec/03-signing.md`로 정리. 연간 고정비 = Apple $99 + (Windows OV $150–300 또는 SignPath 0원) + Play $25(1회)
+  - 🔴 **Microsoft 권장안이 한국에서 막힌다** — Azure Artifact Signing은 조직 미국·캐나다·EU·영국, 개인 미국·캐나다 한정. OV 인증서가 현실적 선택지
+  - 🔴 **EV 인증서는 무의미해졌다** — 2024년 Microsoft가 EV의 SmartScreen 즉시 통과를 제거. $400+/년을 내도 OV와 동일하게 평판을 쌓아야 한다
+  - 🔴 **Play 개인 계정은 「테스터 12명 × 14일」 의무** — 조직 계정은 면제. 출시 일정에 2주가 강제 추가
+  - 🔴 **현재 툴체인으로 macOS 공증 불가** — electron-builder 23.6.0에 `notarize` 필드 0건(실측), 내장 옵션은 24부터. `altool`은 2023-11-01부터 Apple이 거부
+  - 🟢 **SignPath Foundation** — 오픈소스 무료 코드서명. 리포 public 전환으로 후보가 됨(자격 요건 미확인)
 - **리포 public 전환** — 데스크톱 배포 채널(A안)의 전제. 순서: 업무 이메일 제거 → `allowNavigation` 좁히기 → `main` 병합 → 전환. 사후 검증까지 완료
 - **`CE3-S2` `allowNavigation` 좁히기 — `["*"]` → `["127.0.0.1"]`** (G-DOM 통과). 착수하며 **기존 지침이 틀렸음을 소스로 확인**: 이 설정은 URL이 아니라 **호스트 마스크**다(`Bridge.java:395`가 `HostMask.matches(url.getHost())`, `HostMask.java:114`가 `.` 단위 분리). 문서대로 `http://127.0.0.1:3000`을 넣었다면 **매칭 실패로 접속이 막혔을 것**
   - 파생 정정: **B-1′ 폐기** — 호스트만으로는 스킴·포트를 복원할 수 없어 `connect-src` 파생원이 될 수 없다
