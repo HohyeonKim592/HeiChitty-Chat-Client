@@ -27,7 +27,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - 계획용 최소 읽기/grep은 가능하나, **광범위한 다단계 코드 탐색을 자동 연쇄하지 말 것.**
 
 ## 3. 스코프 — 이 경로의 추가 조항
-- **네이티브 플랫폼 폴더(`android/`, `ios/`, `electron/`)는 Capacitor가 생성한 산출물**이다. `npx cap add`/`cap sync`로 재생성·갱신되는 영역이므로 직접 수정은 최소화하고, 불가피하게 손댈 땐(예: 보안 핸들러 조정) 변경 의도를 주석으로 남긴다.
+- **네이티브 플랫폼 폴더(`android/`, `electron/`)는 Capacitor가 생성한 산출물**이다. `npx cap add`/`cap sync`로 재생성·갱신되는 영역이므로 직접 수정은 최소화하고, 불가피하게 손댈 땐(예: 보안 핸들러 조정) 변경 의도를 주석으로 남긴다. **`ios/`는 아직 없다** — `npm run add:ios` 미실행(Xcode·CocoaPods 필요).
 - **`release/`는 빌드 산출물 영역**이다. 전체가 `.gitignore` 처리돼 있고 커밋 대상이 아니다. 손으로 파일을 옮기지 말고 `scripts/build-desktop.sh`·`scripts/collect-mobile.sh`가 관리하게 둔다(정책은 `README.md` 「산출물 관리」).
 
 ## 4. Git — 이 경로의 추가 조항
@@ -46,7 +46,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **서버 주소 = 빌드 타임 config (config-only)** — `web/config.js`의 `window.HEICHITTY_SERVER` 단일값. 사용자에게 노출하지 않으며(런처·주소입력·자동접속 토글 없음), 앱은 그 주소로 **자동 접속**만 한다. 도달 불가/오프라인이면 상태화면에서 **재시도** 제공(online 복귀 시 자동 재시도). 운영/개발 전환은 `config.js` 한 줄 교체. `localStorage` 영속화·서버변경 기능은 없다(2026-06-22 결정).
 - **Capacitor 설정** `capacitor.config.json` — `appId`(`kr.co.heichitty.chat` — 2026-08-10 확정. 변경 시 `android/` 네이티브 패키지도 수기 동기화 필요), `webDir: web`, `server.allowNavigation`(원격 도메인 허용 — 현재 `["*"]`, 운영 서버 도메인 확정 시 **좁혀야 함**).
 - **데스크톱 네비게이션 seam** `electron/src/setup.ts` — 기본 템플릿은 커스텀 스킴 밖 이동을 막는다. 뷰어 동작을 위해 `isAllowedTarget`(자기 스킴 또는 http/https)로 완화함. 이 의도를 깨지 말 것.
+- **데스크톱 CSP seam** — 같은 파일 `setupContentSecurityPolicy()`. 템플릿은 "로컬 자산 전용 앱" 전제라 원격 응답의 CSP까지 덮어쓴다 → **셸(커스텀 스킴) 응답에만** 적용하도록 좁혀 뒀다. 그리고 `readShellServerOrigin()`이 `app/config.js`를 정규식으로 읽어 `connect-src`를 만든다 — 여기의 스킴 보정 규칙은 `web/app.js`의 `defaultSchemeFor()`/`normalize()`와 **반드시 같아야 한다.** 갈리면 도달성 preflight가 CSP에 조용히 막혀, 서버가 살아 있어도 늘 "서버에 연결할 수 없습니다"가 된다(2026-08-10 실제 발생). 둘 중 하나를 고치면 다른 하나도 고칠 것.
+- **셸 스모크·개발모드가 못 보는 층이 있다** — 목 `fetch`에는 CSP가 없어 스모크는 9/9 통과하고 `electron:start-live`도 정상인데 **패키징 빌드에서만** 터진 사고가 두 번 있었다(위 CSP 건 / `electron/src/index.ts`의 autoUpdater 404 → 모달로 기동 정지). 접속 경로·Electron 메인 프로세스를 건드렸으면 `./scripts/build-desktop.sh mac`으로 패키징본까지 확인한다. 패키징 앱은 CDP가 안 붙어 로그·TCP·화면으로 진단해야 한다.
 - **플랫폼별 빌드 전제** — iOS=Mac+Xcode+CocoaPods, Android=Android SDK. 코드는 한 벌, 빌드는 플랫폼별 도구 필요. 절차는 `README.md`.
+
+### 값 하나를 바꾸면 따라오는 곳
+
+| 바꾸는 값 | 함께 손댈 곳 |
+|---|---|
+| 서버 주소 | `web/config.js`가 SSOT → `capacitor.config.json`의 `allowNavigation`을 **수기로** 같은 값으로. Electron `connect-src`는 config.js에서 자동 파생(위 CSP seam) |
+| `appId` | `android/app/build.gradle`(`namespace`·`applicationId`) · `android/app/src/main/java/`의 패키지 디렉터리 · `strings.xml`(`package_name`·`custom_url_scheme`) — **`cap sync`로 갱신되지 않는다** |
 
 ## 개발 명령 (dev-loop)
 
@@ -55,13 +64,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | 목적 | 명령 |
 |---|---|
 | 구문 검사 (lint) | `npm run lint` — `node --check web/app.js` |
-| 셸 스모크 테스트 | `npm test` (= `npm run smoke` = `node test/ce1-shell.mjs`) |
+| 셸 스모크 테스트 | `npm test` (= `npm run smoke` = `npm run test:ce1` = `node test/ce1-shell.mjs`) |
 | 네이티브에 웹 자산 반영 | `npx cap sync` |
-| 데스크톱 배포 빌드 | `./scripts/build-desktop.sh <mac\|win>` — 정리→sync→tsc→패키징 일괄 |
+| 데스크톱 개발 실행(창 띄우기) | `npm run run:electron` — sync 후 `electron:start-live`(웹 자산 변경 자동 반영) |
+| 데스크톱 배포 빌드 | `./scripts/build-desktop.sh <mac\|win>` — 정리→sync→tsc→패키징 일괄. `KEEP=<n>`으로 아카이브 개수 조정 |
 | 모바일 산출물 수집 | `./scripts/collect-mobile.sh <android\|ios>` |
+| iOS 플랫폼 추가(미실행) | `npm run add:ios` — Xcode·CocoaPods 필요 |
 
 - 테스트는 **CE1 스모크 한 벌**(`test/ce1-shell.mjs`)이 전부다. zero-dep — 브라우저 전역(+ `window.HEICHITTY_SERVER`)을 목으로 깔고 `app.js`를 캐시버스트로 재로딩해 config 정규화·자동접속(`location.replace`)·도달성점검·오프라인·재시도를 직접 검증한다. 시나리오 추가는 이 파일에 함수로 붙인다.
 - `app.js`는 import 즉시 top-level에서 `attemptConnect()`를 실행하므로, 테스트는 시나리오마다 전역을 새로 설치한 뒤 모듈을 재로딩한다 — 새 시나리오 작성 시 이 패턴을 따를 것.
+- **단일 테스트만 돌리는 수단은 없다.** 자체 러너(파일 하단 `tests` 배열 순회)라 이름 필터 플래그가 없다. 한 건만 보려면 그 파일에서 배열을 임시로 줄이고, 되돌린 뒤 커밋할 것.
 
 ## 컨텍스트 맵
 
