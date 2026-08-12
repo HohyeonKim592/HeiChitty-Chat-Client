@@ -17,7 +17,7 @@
 | 운영서버 | **추후 도입 가능성 있음** — 도메인 미정. 도입 시 `web/config.js` 한 줄 + `allowNavigation` 교체 후 재빌드(config-only 설계의 이점) | 🟡 보류 |
 | 부가기능 v1 | **푸시 알림(CE4)·자동 업데이트(CE5) 포함** | ✅ 확정 |
 | git 저장소·브랜치 | GitHub `HohyeonKim592/HeiChitty-Chat-Client` · `Hohyeon.Kim`(작업) → `main`(기본) 병합 — 형제 chitty 리포 관례 승계 | ✅ 확정 (2026-08-10) |
-| 리포 공개범위 | **public 전환**(2026-08-12 결정) — `electron-updater`가 private 리포에서는 최종 사용자 머신마다 `GH_TOKEN`을 요구하기 때문. 전환 전 민감정보 스캔 완료(자격증명 0건) | 🟡 결정 완료·전환 미실행 |
+| 리포 공개범위 | **public** — `electron-updater`가 private 리포에서는 최종 사용자 머신마다 `GH_TOKEN`을 요구하기 때문. 전환 전 민감정보 스캔(자격증명 0건)·업무 이메일 제거·`allowNavigation` 좁히기를 마치고 전환 | ✅ 전환 완료 (2026-08-12) |
 | 모바일 배포 채널 | **공개 스토어** (Google Play · Apple App Store) | ✅ 확정 (2026-08-11) |
 | 데스크톱 배포 채널 | **GitHub Releases + `electron-updater`**(안 A). Mac App Store 미채택 — 샌드박스·심사(4.2) 부담 대비 이점 없음 | ✅ 확정 (2026-08-12) |
 

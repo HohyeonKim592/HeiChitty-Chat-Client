@@ -10,9 +10,12 @@
 
 - [x] **업무 이메일 제거** — `electron/package.json` 교체 + 커밋 이력 14건 재작성 + 로컬 `user.email` 설정 + **force push 반영 완료**(2026-08-12). GitHub API로 원격 커밋 author 교체 확인, `origin/main`·`origin/Hohyeon.Kim` 잔존 0건
   - 로컬에 `backup/pre-mail-main`·`backup/pre-mail-hohyeon`(구 이력, 업무 이메일 포함)이 남아 있다. **원격에 push하지 말 것** — 불필요해지면 삭제
-- [ ] **리포 public 전환** — `gh repo edit --visibility public`. **되돌릴 수 없다**(복제·인덱싱). 선행: 위 force push 완료 · 아래 `allowNavigation` 좁히기 권장
-  - 전환 전 민감정보 스캔 완료(2026-08-12): 자격증명 **0건** · 이력에서 삭제된 파일 **0건** · 사설 IP **0건**. 노출되는 건 `docs/`의 내부 로드맵뿐
-  - **폴더 단위 공개/비공개는 불가능**(GitHub visibility는 리포 전체 단위 — git이 트리 전체를 해시로 묶기 때문). `docs/`를 가리려면 별도 private 리포 분리 또는 private submodule뿐이고, 둘 다 동기화·관리 비용이 더 크다 → **그대로 공개** 방향
+- [x] **리포 public 전환 완료** (2026-08-12) — https://github.com/HohyeonKim592/HeiChitty-Chat-Client
+  - 전환 전 민감정보 스캔: 자격증명 **0건** · 이력에서 삭제된 파일 **0건** · 사설 IP **0건**
+  - 전환 직전 `Hohyeon.Kim` → `main` 병합(ff). **`main`이 뒤처진 채로 공개하면 업무 이메일·`["*"]`이 기본 브랜치에 노출**될 뻔했다 — 다음에도 공개 전 기본 브랜치 내용을 확인할 것
+  - 사후 검증: GitHub API로 공개 커밋 17건 전수 author 확인 → 전부 `gimhyeon592@gmail.com`
+  - **폴더 단위 공개/비공개는 불가능**(GitHub visibility는 리포 전체 단위 — git이 트리 전체를 해시로 묶기 때문). `docs/`는 그대로 공개하기로 함
+  - ⚠️ 로컬 `backup/pre-mail-*` 브랜치에 구 이력(업무 이메일)이 남아 있다. **push 금지**
 - [ ] **`CE5-S1` 선행 3건** — ① mac 타깃에 `zip` 추가(현재 `dmg` 단독 → Squirrel.Mac 자동업데이트 불가) ② `publish`에 `owner`/`repo` 명시 ③ macOS 코드 서명〔G-SIGN〕 없이는 macOS 자동업데이트가 동작하지 않음
 - [ ] **G-SIGN 서명 방법 조사** — 공개 스토어 기준 4플랫폼 서명 요건 정리: Android(Play 앱 서명 vs 자체 keystore) · iOS(Apple 인증서·프로비저닝) · Windows(코드서명 인증서 — 스토어 밖 배포 시 SmartScreen 경고 제거용) · macOS(Developer ID + notarization). **`CE5-S1`의 선행조건이기도 하다**(macOS 자동업데이트 = 서명 필수)
 - [ ] **Xcode + CocoaPods 설치** 〔사용자 작업〕 — G-IOS 전제. 용량·라이선스 동의 때문에 대행 불가. 설치 후 `npm run add:ios`(CE0-S6)부터 진행
@@ -42,6 +45,7 @@
 
 ## 최근 완료 (2026-08-12)
 
+- **리포 public 전환** — 데스크톱 배포 채널(A안)의 전제. 순서: 업무 이메일 제거 → `allowNavigation` 좁히기 → `main` 병합 → 전환. 사후 검증까지 완료
 - **`CE3-S2` `allowNavigation` 좁히기 — `["*"]` → `["127.0.0.1"]`** (G-DOM 통과). 착수하며 **기존 지침이 틀렸음을 소스로 확인**: 이 설정은 URL이 아니라 **호스트 마스크**다(`Bridge.java:395`가 `HostMask.matches(url.getHost())`, `HostMask.java:114`가 `.` 단위 분리). 문서대로 `http://127.0.0.1:3000`을 넣었다면 **매칭 실패로 접속이 막혔을 것**
   - 파생 정정: **B-1′ 폐기** — 호스트만으로는 스킴·포트를 복원할 수 없어 `connect-src` 파생원이 될 수 없다
   - 한계 기록: 이 설정으로는 **포트를 좁힐 수 없다**(호스트가 최소 입도)

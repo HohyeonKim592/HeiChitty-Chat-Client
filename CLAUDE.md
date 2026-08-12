@@ -34,7 +34,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 > 일반 Git 규칙(상태변경은 명시 지시 시에만 · `git add` 명시 경로 · main 직접 작업 금지 · destructive 재확인 · **AI 저작 흔적 금지**)은 **공통 원칙 §3**이 정본이다.
 
 - **브랜치 모델** — 원격은 `HohyeonKim592/HeiChitty-Chat-Client`(default `main`). 작업은 **`Hohyeon.Kim` 브랜치**에서 하고 완료분만 `main`에 병합한다(형제 chitty 리포 관례).
-- **리포는 public 전환 예정**(2026-08-12 결정 · 미실행) — `electron-updater`가 private 리포에서 사용자 토큰을 요구하기 때문. **전환 후에는 커밋·문서에 내부 정보를 쓰지 않는다**(자격증명은 물론, 사내 호스트·계정·미공개 일정). 근거는 `docs/spec/02-epic-story.md` 「리포 공개범위」.
+- **리포는 public이다**(2026-08-12 전환) — `electron-updater`가 private 리포에서 사용자 토큰을 요구하기 때문. **커밋·문서·코드에 내부 정보를 쓰지 않는다**(자격증명은 물론, 사내 호스트·계정·미공개 일정). 근거는 `docs/spec/02-epic-story.md` 「리포 공개범위」.
+  - 로컬에 `backup/pre-mail-*` 브랜치가 있다(구 이력, 업무 이메일 포함). **절대 push하지 말 것.**
 
 ## 7. 진행 가시화 (Task 목록) → 공통 원칙 §8
 > 이 경로에서 쓰던 조항이 2026-08-10 공통 원본 **§8**로 승격되어 전 프로젝트에 적용된다. 내용은 원본이 정본 — 여기서 중복 기술하지 않는다.
