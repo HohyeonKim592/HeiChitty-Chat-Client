@@ -16,9 +16,10 @@
 | 테스트서버 위치 | **Mac mini에서 서버·클라이언트를 같이 실행** → `http://127.0.0.1:3000` 루프백 그대로 사용. LAN·mDNS 주소 불필요 | ✅ 확정 (2026-08-11) |
 | 운영서버 | **추후 도입 가능성 있음** — 도메인 미정. 도입 시 `web/config.js` 한 줄 + `allowNavigation` 교체 후 재빌드(config-only 설계의 이점) | 🟡 보류 |
 | 부가기능 v1 | **푸시 알림(CE4)·자동 업데이트(CE5) 포함** | ✅ 확정 |
-| git 저장소·브랜치 | private GitHub `HohyeonKim592/HeiChitty-Chat-Client` · `Hohyeon.Kim`(작업) → `main`(기본) 병합 — 형제 chitty 리포 관례 승계 | ✅ 확정 (2026-08-10) |
+| git 저장소·브랜치 | GitHub `HohyeonKim592/HeiChitty-Chat-Client` · `Hohyeon.Kim`(작업) → `main`(기본) 병합 — 형제 chitty 리포 관례 승계 | ✅ 확정 (2026-08-10) |
+| 리포 공개범위 | **public 전환**(2026-08-12 결정) — `electron-updater`가 private 리포에서는 최종 사용자 머신마다 `GH_TOKEN`을 요구하기 때문. 전환 전 민감정보 스캔 완료(자격증명 0건) | 🟡 결정 완료·전환 미실행 |
 | 모바일 배포 채널 | **공개 스토어** (Google Play · Apple App Store) | ✅ 확정 (2026-08-11) |
-| 데스크톱 배포 채널 | 공개 스토어 결정은 모바일 한정. Windows/macOS는 **별개로 미정** — GitHub Releases + `electron-updater`(CE5-S1) vs Mac App Store | 🔴 미정 |
+| 데스크톱 배포 채널 | **GitHub Releases + `electron-updater`**(안 A). Mac App Store 미채택 — 샌드박스·심사(4.2) 부담 대비 이점 없음 | ✅ 확정 (2026-08-12) |
 
 ## EPIC 개요
 
@@ -79,8 +80,10 @@
 - [ ] `CE2-S2` **Android 서명 빌드** — release keystore + AAB/APK 〔G-SIGN〕. 공개 스토어 확정(2026-08-11)이라 **Play Console 등록 + AAB 업로드**가 목표 형태
 - [ ] `CE2-S3` **iOS 빌드·서명** — Xcode 프로젝트(CE0-S6 후) + Apple 개발자계정·프로비저닝 〔G-IOS·G-SIGN〕
   - ⚠️ **App Store 심사 리스크(미확인)** — 이 앱은 원격 웹을 그대로 띄우는 뷰어다. Apple 심사지침 **4.2 Minimum Functionality**가 웹 래퍼에 적용되는 사례가 알려져 있어, 공개 App Store를 목표로 하면 이 리스크를 먼저 확인해야 한다. *지침 조항의 존재는 사실이나 이 앱에 실제로 어떻게 적용될지는 미조사 — 심사 전 확인 필요*
-- [~] `CE2-S4` 배포 채널 확정·산출물 정의 〔G-DIST〕 — **채널 확정(2026-08-11): 모바일 = 공개 스토어**(Google Play · App Store)
-  - 남은 것: **데스크톱 채널 미정**(GitHub Releases + `electron-updater` vs Mac App Store — `CE5-S1`과 함께 결정) · 스토어별 산출물 정의(AAB / IPA / dmg / exe) · 스토어 계정 준비(Play Console 등록비 1회 · Apple Developer Program 연간)
+- [~] `CE2-S4` 배포 채널 확정·산출물 정의 〔G-DIST〕 — **채널 전부 확정**: 모바일 = 공개 스토어(2026-08-11) · **데스크톱 = GitHub Releases + `electron-updater`(2026-08-12, 안 A)**
+  - **데스크톱에서 Mac App Store를 택하지 않은 이유** — MAS는 샌드박스가 필수라 구조 변경이 따르고 심사(4.2)를 통과해야 하는데, 원격 웹 뷰어라는 성격상 얻는 것이 없다. 반면 안 A는 현재 코드가 이미 그 전제다(`publish: github` + `electron-updater` 의존성 보유)
+  - **GitHub 사용한도는 제약이 아니다**(2026-08-12 조사) — 공식 문서상 자산당 2 GiB·릴리스당 1000개 제한은 있으나 **"릴리스 총 크기·대역폭에는 제한이 없다"**. AUP §9의 "현저히 과다 시 스로틀" 조항만 남는데, 실측 릴리스 1회 239MB(dmg 164MB + exe 75MB, zip 타깃 추가 시 ~400MB) 규모로는 걸릴 수준이 아니다
+  - 남은 것: 스토어별 산출물 정의(AAB / IPA / dmg / exe) · 스토어 계정 준비(Play Console 등록비 1회 · Apple Developer Program 연간)
 
 ### CE3 — 구성·브랜딩
 - [x] `CE3-S1` **appId 확정** — `kr.co.heichitty.chat` (2026-08-10 확정, android 네이티브 패키지까지 반영) 〔G-ID〕
@@ -99,7 +102,12 @@
 - [ ] `CE4-S5` **푸시 알림** — FCM(Android)·APNs(iOS) 토큰 등록·수신·탭 이동 〔**서버측 발송 연동 의존**〕
 
 ### CE5 — 자동 업데이트 *(v1)*
-- [ ] `CE5-S1` **Desktop** — `electron-updater`(피드 URL·서명·롤백)
+- [ ] `CE5-S1` **Desktop** — `electron-updater`(피드 URL·서명·롤백). **채널 = GitHub Releases 확정(2026-08-12)**. 착수 전 아래 3건이 선행돼야 실제로 동작한다
+  - 🔴 **리포 public 전환** — private 리포로 업데이트하려면 `GH_TOKEN`을 **최종 사용자 머신에** 심어야 한다(electron-builder 문서: *"아주 특수한 경우용, 모든 사용자에게 적합하지 않다"*). **2026-08-10 autoUpdater 404 모달 사고의 실제 원인이 이것**이었다. → public 전환으로 해소(2026-08-12 결정)
+  - 🔴 **mac 타깃에 `zip` 추가** — 현재 `electron-builder.config.json`의 mac 타깃이 `dmg` 단독이다. **`zip`은 Squirrel.Mac 필수**이고(문서: *"dmg 패키지에서 zip을 끄면 자동업데이트가 깨진다"*, 기본값이 `dmg`+`zip`), 지금 생성되는 `latest-mac.yml`은 dmg만 가리켜 업데이트 적용 단계에서 동작하지 않는다
+  - 🔴 **macOS 코드 서명** 〔G-SIGN〕 — 문서 원문: *"macOS 앱은 자동업데이트가 동작하려면 반드시 서명되어야 한다"*. Windows는 미서명으로도 업데이트 자체는 동작(SmartScreen 경고만)
+  - `publish` 설정에 `owner`/`repo` 명시 + `electron/src/index.ts`의 `.catch()` 삼킴 재검토(2026-08-10 응급조치분)
+  - `.blockmap`은 이미 생성되고 있다(mac 175K · win 81K) — 차등 다운로드로 실 대역폭은 더 줄어든다
 - [ ] `CE5-S2` **모바일** — 스토어/사내 배포에 맞춘 업데이트 전략 + 강제 최소버전(원격 게이트) 〔G-DIST 의존〕
 - [ ] `CE5-S3` 웹자산 OTA(선택) — `web/` 핫업데이트(Capacitor live-update류) 검토
 
@@ -118,11 +126,11 @@
 | **G-DOM** 허용 도메인 | CE3-S2 | `allowNavigation`을 접속 대상으로 한정 | ✅ 방향 확정(2026-08-11) — 테스트는 **같은 Mac mini 루프백 `http://127.0.0.1:3000`**. 운영 도메인은 추후. 좁히기 착수 가능(현재 `["*"]` 광역) |
 | **G-IOS** iOS 빌드환경 | CE0-S6/CE2-S3 | Mac+Xcode+CocoaPods 확보, `cap add ios` 성공 | 🔴 미통과 — **Xcode·CocoaPods 설치 필요**(2026-08-11 확인). Xcode는 용량·라이선스 동의 때문에 **사용자가 직접 설치**해야 한다. 설치 후 `npm run add:ios`부터 진행 |
 | **G-SIGN** 코드 서명 | CE2-S2/S3 | Android keystore · Apple 인증서 · 데스크톱 서명 | 🔴 미정 — **서명 방법 조사 필요**(2026-08-11). 공개 스토어 확정으로 요구사항은 정해졌다: Play 앱 서명/keystore · Apple 인증서+프로비저닝 · (스토어 밖 데스크톱 배포 시) Windows 코드서명. 현재 dmg/exe는 미서명 |
-| **G-DIST** 배포 채널 | CE2-S4 | 사내배포 / 공개 스토어 택일 | ✅ 통과 — **공개 스토어**(2026-08-11, Google Play · Apple App Store). 단 **데스크톱 채널은 별개로 미정** |
+| **G-DIST** 배포 채널 | CE2-S4 | 사내배포 / 공개 스토어 택일 | ✅ **완전 통과** — 모바일 = 공개 스토어(2026-08-11, Google Play · Apple App Store) · 데스크톱 = **GitHub Releases + `electron-updater`**(2026-08-12). 후속: 리포 public 전환·mac `zip` 타깃 추가는 `CE5-S1` |
 
 ## 진행 순서 (Wave)
 
-- **Wave 0 〔결정〕** ~~G-ID(appId)~~ ✅ 통과(2026-08-10) · ~~G-DOM(도메인)~~ ✅ 방향 확정(2026-08-11, 루프백) · ~~G-DIST(배포채널)~~ ✅ 통과(2026-08-11, 공개 스토어) → **남은 결정: G-SIGN(서명 방법 조사) · 데스크톱 배포 채널 · G-IOS(Xcode 설치)**
+- **Wave 0 〔결정〕** ~~G-ID(appId)~~ ✅ 통과(2026-08-10) · ~~G-DOM(도메인)~~ ✅ 방향 확정(2026-08-11, 루프백) · ~~G-DIST(배포채널)~~ ✅ **완전 통과**(모바일 2026-08-11 공개 스토어 · 데스크톱 2026-08-12 GitHub Releases) → **남은 결정: G-SIGN(서명 방법 조사) · G-IOS(Xcode 설치)**
 - **Wave 1** CE1 뷰어 코어 완성(config-only: S1' config 주입·S3 연결실패·S5 로딩) + CE3 구성·브랜딩(appId·allowNavigation 좁히기·아이콘/스플래시/표시명)
 - **Wave 2** CE0-S6 iOS 추가 + CE2 플랫폼 빌드·서명(Desktop→Android→iOS)
 - **Wave 3** CE4 네이티브 통합·푸시 + CE5 자동 업데이트

@@ -2,14 +2,19 @@
 
 > 진행 SSOT는 `spec/02-epic-story.md`(체크박스) + `git log`. 이 파일은 **다음에 손댈 것**을 위에서부터 모아둔 작업 큐다.
 
-## 🚧 게이트 후속 (2026-08-11 결정 반영)
+## 🚧 데스크톱 배포 채널 확정 후속 (2026-08-12)
 
-> 게이트 4건 결정: G-DIST ✅ 공개 스토어 · G-DOM ✅ 루프백(Mac mini) · G-SIGN 🔴 조사 필요 · G-IOS 🔴 설치 필요.
-> 게이트 표 정본은 `spec/02-epic-story.md` 「결정 게이트」.
+> **결정: 데스크톱 = GitHub Releases + `electron-updater`**(안 A). Mac App Store 미채택.
+> 함께 결정: **소스 리포 public 전환**(private면 `electron-updater`가 사용자 머신마다 `GH_TOKEN`을 요구).
+> 상세 근거·조사 결과는 `spec/02-epic-story.md`의 `CE2-S4`·`CE5-S1`.
 
-- [ ] **G-SIGN 서명 방법 조사** — 공개 스토어 기준 4플랫폼 서명 요건 정리: Android(Play 앱 서명 vs 자체 keystore) · iOS(Apple 인증서·프로비저닝) · Windows(코드서명 인증서 — 스토어 밖 배포 시 SmartScreen 경고 제거용) · macOS(Developer ID + notarization vs Mac App Store). 비용·절차·선행조건까지
+- [~] **업무 이메일 제거** — `electron/package.json` 교체 + 커밋 이력 14건 재작성 + 로컬 `user.email` 설정 **완료**. 남은 것: **`git push --force-with-lease origin main Hohyeon.Kim`**(권한 정책에 막혀 미실행). 원본은 `backup/pre-mail-main`·`backup/pre-mail-hohyeon`에 보존 — push 반영 확인 후 삭제할 것
+- [ ] **리포 public 전환** — `gh repo edit --visibility public`. **되돌릴 수 없다**(복제·인덱싱). 선행: 위 force push 완료 · 아래 `allowNavigation` 좁히기 권장
+  - 전환 전 민감정보 스캔 완료(2026-08-12): 자격증명 **0건** · 이력에서 삭제된 파일 **0건** · 사설 IP **0건**. 노출되는 건 `docs/`의 내부 로드맵뿐
+  - **폴더 단위 공개/비공개는 불가능**(GitHub visibility는 리포 전체 단위 — git이 트리 전체를 해시로 묶기 때문). `docs/`를 가리려면 별도 private 리포 분리 또는 private submodule뿐이고, 둘 다 동기화·관리 비용이 더 크다 → **그대로 공개** 방향
+- [ ] **`CE5-S1` 선행 3건** — ① mac 타깃에 `zip` 추가(현재 `dmg` 단독 → Squirrel.Mac 자동업데이트 불가) ② `publish`에 `owner`/`repo` 명시 ③ macOS 코드 서명〔G-SIGN〕 없이는 macOS 자동업데이트가 동작하지 않음
+- [ ] **G-SIGN 서명 방법 조사** — 공개 스토어 기준 4플랫폼 서명 요건 정리: Android(Play 앱 서명 vs 자체 keystore) · iOS(Apple 인증서·프로비저닝) · Windows(코드서명 인증서 — 스토어 밖 배포 시 SmartScreen 경고 제거용) · macOS(Developer ID + notarization). **`CE5-S1`의 선행조건이기도 하다**(macOS 자동업데이트 = 서명 필수)
 - [ ] **Xcode + CocoaPods 설치** 〔사용자 작업〕 — G-IOS 전제. 용량·라이선스 동의 때문에 대행 불가. 설치 후 `npm run add:ios`(CE0-S6)부터 진행
-- [ ] **데스크톱 배포 채널 결정** — 공개 스토어 결정은 모바일 한정이다. Windows/macOS는 GitHub Releases + `electron-updater`(CE5-S1) vs Mac App Store 중 미정
 - [ ] **스토어 계정 준비** — Google Play Console(등록비 1회) · Apple Developer Program(연간). `CE2-S2`·`CE2-S3` 선행조건
 - [ ] **App Store 심사 리스크 확인** — 원격 웹 뷰어라 Apple 심사지침 4.2(Minimum Functionality) 적용 가능성. 조항 존재는 사실이나 **이 앱에 어떻게 적용될지는 미조사**. 공개 App Store 목표라면 심사 전 확인 필요
 - [ ] **`CE3-S2` `allowNavigation` 좁히기** — G-DOM 확정으로 즉시 가능. `["*"]` → 루프백 `http://127.0.0.1:3000` 한정. `web/config.js`와 같은 값으로
@@ -33,6 +38,13 @@
 ## 🔧 정리 후보 (기술부채 — 급하지 않음)
 
 - (없음)
+
+## 최근 완료 (2026-08-12)
+
+- **데스크톱 배포 채널 확정 — GitHub Releases + `electron-updater`** (G-DIST 완전 통과). Mac App Store는 샌드박스 구조 변경 + 심사 4.2 부담 대비 이점이 없어 미채택. 현재 코드가 이미 안 A 전제(`publish: github` + `electron-updater` 의존성)
+  - **GitHub 사용한도 조사** — 자산당 2 GiB·릴리스당 1000개 제한은 있으나 **총 크기·대역폭 무제한**(공식 문서 명시). AUP §9 "현저히 과다 시 스로틀"만 남는데 실측 릴리스 1회 239MB 규모로는 무관
+  - **자동업데이트가 지금 코드로는 동작하지 않음을 발견** — ① 리포 private(사용자 머신마다 `GH_TOKEN` 필요, 2026-08-10 404 사고의 원인) ② mac 타깃 `dmg` 단독(Squirrel.Mac은 `zip` 필수) ③ macOS 서명 필수. 셋 다 `CE5-S1` 선행조건으로 등록
+- **업무 이메일 제거(public 전환 대비)** — `electron/package.json` author + 커밋 이력 14건 author/committer를 `gimhyeon592@gmail.com`으로 교체. 로컬 `user.email`을 이 리포에만 설정(전역 미변경). 검증: 트리 내용 diff 0 · 커밋 수 동일(12/14) · `main`·`Hohyeon.Kim`에 업무 이메일 0건. **원격 반영(force push)은 미실행**
 
 ## 최근 완료 (2026-08-11)
 
@@ -81,6 +93,6 @@
 ## 다음 작업 (참고)
 
 - 수동·실기 재검증 (위 검증 후보 — 시나리오 A 재검증·오프라인 동선 우선)
-- Wave 0 남은 결정: 운영 도메인(G-DOM)·배포 채널(G-DIST) — G-DOM 정해지면 `web/config.js`+`allowNavigation` 동시 교체
+- Wave 0 남은 결정: **G-SIGN(서명 방법)·G-IOS(Xcode 설치)** 둘뿐 — G-DOM·G-DIST는 통과
 - **G-DOM 확정 시 `connect-src` 파생원 격상 검토(B-1′)** — 지금은 `app/config.js` 정규식 파싱이라 `web/app.js`와 스킴 보정 규칙이 갈릴 위험이 있다. `capacitor.config.json`의 `allowNavigation`(현재 `["*"]`)이 운영 도메인으로 좁혀지면 그쪽에서 파생하도록 바꿔 파싱·규칙 중복을 없앨 수 있다(`index.ts`가 이미 `capacitorFileConfig`를 보유)
 - CE6-S4: pre-push 훅(lint+smoke 자동화) — 원격이 생겨 착수 가능
