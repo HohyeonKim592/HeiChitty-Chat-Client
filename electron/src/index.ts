@@ -47,14 +47,20 @@ if (electronIsDev) {
   await myCapacitorApp.init();
   // Check for updates if we are in a packaged app.
   //
-  // 자동 업데이트(CE5-S1)는 아직 미구현이고 릴리스 피드도 없다(리포 private).
-  // 이 호출이 실패하면 unhandled Promise rejection 이 되어 electron-unhandled 이
-  // 프로덕션에서 모달 오류창을 띄우고, 앱이 그 상태로 멈춘다(2026-08-10 패키징 빌드 확인).
-  // 업데이트 확인 실패가 앱 기동을 막지 않도록 여기서 삼킨다.
-  // CE5-S1 착수 시 피드 설정과 함께 오류 처리 정책을 다시 볼 것.
-  autoUpdater.checkForUpdatesAndNotify().catch((err) => {
-    console.warn('[updater] 업데이트 확인 건너뜀:', err?.message ?? err);
-  });
+  // 자동 업데이트(CE5-S1)의 범위는 Windows 전용이다. macOS 는 「연 0원」 방침으로 서명을
+  // 하지 않는데, Squirrel.Mac 은 서명된 앱에서만 동작하므로 업데이트가 성립하지 않는다.
+  // 매번 실패할 것이 확정된 요청을 보내지 않도록 호출 자체를 win32 로 좁힌다.
+  // (macOS 사용자는 새 dmg 를 직접 받아 재설치한다.)
+  //
+  // .catch() 는 유지한다. 리포 public 전환(2026-08-12)으로 피드 접근 자체는 열렸으나,
+  // 릴리스가 아직 없거나 오프라인이면 조회는 여전히 실패한다. 실패가 unhandled Promise
+  // rejection 이 되면 electron-unhandled 이 프로덕션에서 모달 오류창을 띄워 앱이 그 상태로
+  // 멈춘다(2026-08-10 패키징 빌드에서 실제 발생). 업데이트 확인 실패가 기동을 막아선 안 된다.
+  if (process.platform === 'win32') {
+    autoUpdater.checkForUpdatesAndNotify().catch((err) => {
+      console.warn('[updater] 업데이트 확인 건너뜀:', err?.message ?? err);
+    });
+  }
 })();
 
 // Handle when all of our windows are close (platforms have their own expectations).

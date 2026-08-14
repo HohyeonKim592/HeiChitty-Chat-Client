@@ -12,7 +12,9 @@
     "app/**/*"
   ],
   "publish": {
-    "provider": "github"
+    "provider": "github",
+    "owner": "HohyeonKim592",
+    "repo": "HeiChitty-Chat-Client"
   },
   "nsis": {
     "allowElevation": true,
@@ -26,7 +28,8 @@
         "arch": ["x64"]
       }
     ],
-    "icon": "assets/appIcon.ico"
+    "icon": "assets/appIcon.ico",
+    "verifyUpdateCodeSignature": false
   },
   "mac": {
     "category": "public.app-category.social-networking",
